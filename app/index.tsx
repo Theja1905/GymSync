@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import React from 'react';
 import { Button, StyleSheet, Text, View } from 'react-native';
 
@@ -6,15 +6,24 @@ export default function Index() {
   const router = useRouter();
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Welcome to GymSync!</Text>
-      <View style={styles.buttonContainer}>
-        <Button title="Log In" onPress={() => router.push('/login')} />
+    <>
+      {/* Set screen options here */}
+      <Stack.Screen
+        options={{
+          title: 'Welcome!!',  // Custom title here
+          // headerShown: false,        // Uncomment this line if you want to hide the header entirely
+        }}
+      />
+      <View style={styles.container}>
+        <Text style={styles.title}>Hello!! Let's Get Started!</Text>
+        <View style={styles.buttonContainer}>
+          <Button title="Log In" onPress={() => router.push('/login')} />
+        </View>
+        <View style={styles.buttonContainer}>
+          <Button title="Sign Up" onPress={() => router.push('/signup')} />
+        </View>
       </View>
-      <View style={styles.buttonContainer}>
-        <Button title="Sign Up" onPress={() => router.push('/signup')} />
-      </View>
-    </View>
+    </>
   );
 }
 
