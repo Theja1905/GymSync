@@ -46,7 +46,7 @@ export default function LoginScreen() {
           autoCorrect={false}
           value={email}
           onChangeText={setEmail}
-          editable={!loading}
+          editable={!loading} //not editable when loading is true
         />
       </View>
 
@@ -66,34 +66,14 @@ export default function LoginScreen() {
         <ActivityIndicator size="large" color="#0000ff" />
       ) : (
         <Button title="Log In" onPress={handleLogin} />
-      )}
+      )} 
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 20,
-    backgroundColor: '#fff',
-  },
-  inputGroup: {
-    marginBottom: 15,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 5,
-    color: '#333',
-  },
-  input: {
-    height: 50,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    fontSize: 16,
-    backgroundColor: '#fff',
-  },
+  container: {flex: 1,justifyContent: 'center',paddingHorizontal: 20,backgroundColor: '#gff',},
+  inputGroup: {marginBottom: 15,},
+  label: {fontSize: 16,fontWeight: '600',marginBottom: 5,color: '#333',},
+  input: {height: 50,borderWidth: 1,borderColor: '#ccc',borderRadius: 8,paddingHorizontal: 10,fontSize: 16,backgroundColor: '#fff',},
 });

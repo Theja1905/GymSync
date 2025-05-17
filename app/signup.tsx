@@ -23,7 +23,7 @@ export default function SignupScreen() {
         <Text style={styles.label}>Email</Text>
         <TextInput
           style={styles.input}
-          placeholder="Email"
+          placeholder="Enter your email"
           keyboardType="email-address"
           autoCapitalize="none"
           value={email}
@@ -35,7 +35,7 @@ export default function SignupScreen() {
         <Text style={styles.label}>Password</Text>
         <TextInput
           style={styles.input}
-          placeholder="Password"
+          placeholder="Enter your password"
           secureTextEntry
           value={password}
           onChangeText={setPassword}
@@ -48,24 +48,8 @@ export default function SignupScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 20,
-  },
-  inputGroup: {
-    marginBottom: 16,
-  },
-  label: {
-    fontSize: 16,
-    marginBottom: 4,
-    fontWeight: '500',
-  },
-  input: {
-    height: 50,
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    borderColor: '#ccc',
-  },
+  container: {flex: 1,justifyContent: 'center',paddingHorizontal: 20,backgroundColor: '#gff',},
+  inputGroup: {marginBottom: 16,},
+  label: {fontSize: 16,marginBottom: 4,fontWeight: '500',},
+  input: {height: 50,borderWidth: 1,borderRadius: 8,paddingHorizontal: 10,borderColor: '#ccc', backgroundColor: '#fff',},
 });
