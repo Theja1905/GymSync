@@ -1,7 +1,7 @@
 // app/login.tsx
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { ActivityIndicator, Alert, Button, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Button, StyleSheet, Text, TextInput, View, } from 'react-native';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -36,25 +36,33 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.container}>
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        keyboardType="email-address"
-        autoCapitalize="none"
-        autoCorrect={false}
-        value={email}
-        onChangeText={setEmail}
-        editable={!loading}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-        editable={!loading}
-      />
-      {loading ? (
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>Email</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter your email"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoCorrect={false}
+          value={email}
+          onChangeText={setEmail}
+          editable={!loading}
+        />
+      </View>
+
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>Password</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter your password"
+          secureTextEntry
+          value={password}
+          onChangeText={setPassword}
+          editable={!loading}
+        />
+      </View>
+
+      {loading ? ( //loading button if true spinner comes up
         <ActivityIndicator size="large" color="#0000ff" />
       ) : (
         <Button title="Log In" onPress={handleLogin} />
@@ -68,13 +76,24 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     paddingHorizontal: 20,
+    backgroundColor: '#fff',
+  },
+  inputGroup: {
+    marginBottom: 15,
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 5,
+    color: '#333',
   },
   input: {
     height: 50,
-    marginBottom: 12,
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 8,
     paddingHorizontal: 10,
+    fontSize: 16,
+    backgroundColor: '#fff',
   },
 });

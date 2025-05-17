@@ -3,19 +3,22 @@ import { Alert, Button, ScrollView, StyleSheet, Text, TextInput, TouchableOpacit
 
 const fitnessLevels = ['Beginner', 'Intermediate', 'Advanced'] as const;
 const workoutFocusOptions = ['Strength', 'Cardio', 'Flexibility'] as const;
+const fitnessGoals = ['Weight Loss', 'Muscle Gain', 'Endurance'] as const;
 
 type FitnessLevel = typeof fitnessLevels[number];
 type WorkoutFocus = typeof workoutFocusOptions[number];
+type FitnessGoal = typeof fitnessGoals[number];
 
 export default function UserProfile() {
   const [age, setAge] = useState<string>('');
   const [weight, setWeight] = useState<string>('');
   const [height, setHeight] = useState<string>('');
-  const [fitnessLevel, setFitnessLevel] = useState<FitnessLevel>(fitnessLevels[0]);
-  const [workoutFocus, setWorkoutFocus] = useState<WorkoutFocus[]>([]);
+  const [fitnessLevel, setFitnessLevel] = useState<FitnessLevel>(fitnessLevels[0]); //select one
+  const [workoutFocus, setWorkoutFocus] = useState<WorkoutFocus[]>([]);// select multiple
+  const [goal, setGoal] = useState<FitnessGoal>(fitnessGoals[0]);
+  const [workoutFrequency, setWorkoutFrequency] = useState<string>('');
 
-  // Toggle selection of workout focus
-  const toggleFocus = (focus: WorkoutFocus) => {
+  const toggleFocus = (focus: WorkoutFocus) => { //toggle on and off
     if (workoutFocus.includes(focus)) {
       setWorkoutFocus(workoutFocus.filter((f) => f !== focus));
     } else {
@@ -23,22 +26,29 @@ export default function UserProfile() {
     }
   };
 
-  const onSave = () => {
-    const profileData = { age, weight, height, fitnessLevel, workoutFocus };
+  const onSave = () => { //when tap save profile
+    const profileData = {
+      age,
+      weight,
+      height,
+      fitnessLevel,
+      workoutFocus,
+      goal,
+      workoutFrequency,
+    };
     console.log('Profile saved:', profileData);
-     Alert.alert('Success', 'Profile saved successfully!');
-    // TODO: Save to context or AsyncStorage
+    Alert.alert('Success', 'Profile saved successfully!');
+    // TODO: Save to context (rn) or AsyncStorage (do later)
   };
 
-  return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.header}>User Profile</Text>
-
+  return ( //scrollview -> scrollable
+    <ScrollView contentContainerStyle={styles.container}> 
+      <Text style={styles.header}>User Profile & Goal Setting</Text>
       <Text style={styles.label}>Age</Text>
       <TextInput
         style={styles.input}
         value={age}
-        keyboardType="number-pad"
+        keyboardType="number-pad" //type as numbers
         onChangeText={setAge}
         placeholder="Enter your age"
       />
@@ -93,7 +103,7 @@ export default function UserProfile() {
               styles.pickerOption,
               workoutFocus.includes(focus) && styles.pickerOptionSelected,
             ]}
-            onPress={() => toggleFocus(focus)}
+            onPress={() => toggleFocus(focus)} //multiple selection
           >
             <Text
               style={[
@@ -107,7 +117,38 @@ export default function UserProfile() {
         ))}
       </View>
 
-      <Button title="Save Profile" onPress={onSave} />
+      <Text style={styles.label}>Fitness Goal</Text>
+      <View style={styles.pickerContainer}>
+        {fitnessGoals.map((g) => (
+          <TouchableOpacity
+            key={g}
+            style={[
+              styles.pickerOption,
+              goal === g && styles.pickerOptionSelected,
+            ]}
+            onPress={() => setGoal(g)}
+          >
+            <Text
+              style={[
+                styles.pickerOptionText,
+                goal === g && styles.pickerOptionTextSelected,
+              ]}
+            >
+              {g}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <Text style={styles.label}>Workout Frequency (days per week)</Text>
+      <TextInput
+        style={styles.input}
+        keyboardType="number-pad"
+        placeholder="e.g. 3"
+        value={workoutFrequency}
+        onChangeText={setWorkoutFrequency}
+      />
+      <Button title="Save Profile" onPress={onSave} /> 
     </ScrollView>
   );
 }
@@ -164,4 +205,3 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
 });
-
