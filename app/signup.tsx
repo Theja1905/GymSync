@@ -1,6 +1,13 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, Button, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  Alert,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 export default function SignupScreen() {
   const router = useRouter();
@@ -20,11 +27,10 @@ export default function SignupScreen() {
       return;
     }
 
-    // signup logic here (e.g., API call)
+    // Simulate signup logic (e.g., API call)
     Alert.alert('Success', 'Signup successful!');
-    router.push('/login'); // Redirect to login
+    router.push('/login');
   };
-
 
   return (
     <View style={styles.container}>
@@ -55,7 +61,7 @@ export default function SignupScreen() {
         <TextInput
           style={styles.input}
           placeholder="Enter your password"
-          //secureTextEntry
+          secureTextEntry
           value={password}
           onChangeText={setPassword}
         />
@@ -66,20 +72,34 @@ export default function SignupScreen() {
         <TextInput
           style={styles.input}
           placeholder="Confirm your password"
-          //secureTextEntry
+          secureTextEntry
           value={confirmPassword}
           onChangeText={setConfirmPassword}
         />
       </View>
 
-      <Button title="Sign Up" onPress={handleSignup} />
+      <TouchableOpacity style={styles.button} onPress={handleSignup}>
+        <Text style={styles.buttonText}>Sign Up</Text>
+      </TouchableOpacity>
+
+      <View style={styles.loginRedirect}>
+        <Text style={styles.loginText}>Already have an account?</Text>
+        <TouchableOpacity onPress={() => router.push('/login')}>
+          <Text style={styles.loginLink}> Log in</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {flex: 1,justifyContent: 'center',paddingHorizontal: 20,backgroundColor: '#f0f4f8',},
+  container: {flex: 1,justifyContent: 'center',paddingHorizontal: 20,backgroundColor: '#fff',},
   inputGroup: {marginBottom: 16,},
-  label: {fontSize: 16,marginBottom: 4,fontWeight: '500', color: '#333'},
-  input: {height: 50,borderWidth: 1,borderRadius: 8,paddingHorizontal: 10,borderColor: '#ccc', backgroundColor: '#fff',fontSize: 16,},
+  label: {fontSize: 16,marginBottom: 4,fontWeight: '500',color: '#333',},
+  input: {height: 50,borderWidth: 1,borderRadius: 8,paddingHorizontal: 10,borderColor: '#ccc',backgroundColor: '#fff', fontSize: 16,},
+  button: {backgroundColor: '#4b0082', paddingVertical: 15,borderRadius: 8,alignItems: 'center',marginTop: 10,},
+  buttonText: {color: '#fff',fontSize: 17,fontWeight: 'bold',},
+  loginRedirect: {flexDirection: 'row',justifyContent: 'center',marginTop: 20,},
+  loginText: {fontSize: 16,color: '#333',},
+  loginLink: {fontSize: 16,fontWeight: 'bold',color: '#4b0082',},
 });

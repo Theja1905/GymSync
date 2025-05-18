@@ -1,6 +1,14 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { ActivityIndicator, Alert, Button, StyleSheet, Text, TextInput, TouchableOpacity, View, } from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -29,7 +37,7 @@ export default function LoginScreen() {
     setTimeout(() => {
       setLoading(false);
       Alert.alert('Success', 'Login successful!');
-      router.replace('/(tabs)/home'); // Navigate to home and remove login from history
+      router.replace('/(tabs)/home');
     }, 1500);
   };
 
@@ -54,7 +62,7 @@ export default function LoginScreen() {
         <TextInput
           style={styles.input}
           placeholder="Enter your password"
-          //secureTextEntry
+          secureTextEntry
           value={password}
           onChangeText={setPassword}
           editable={!loading}
@@ -62,9 +70,11 @@ export default function LoginScreen() {
       </View>
 
       {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
+        <ActivityIndicator size="large" color="#4B0082" />
       ) : (
-        <Button title="Log In" onPress={handleLogin} />
+        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+          <Text style={styles.loginButtonText}>Log In</Text>
+        </TouchableOpacity>
       )}
 
       <View style={styles.signupContainer}>
@@ -78,11 +88,14 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {flex: 1,justifyContent: 'center',paddingHorizontal: 20,backgroundColor: '#f0f4f8',},
+  container: {flex: 1,justifyContent: 'center',paddingHorizontal: 20,backgroundColor: '#FFFFFF',},
   inputGroup: {marginBottom: 15,},
   label: {fontSize: 16,fontWeight: '600',marginBottom: 5,color: '#333',},
   input: {height: 50,borderWidth: 1,borderColor: '#ccc',borderRadius: 8,paddingHorizontal: 10,fontSize: 16,backgroundColor: '#fff',},
+  loginButton: {backgroundColor: '#191970',paddingVertical: 14,borderRadius: 8,alignItems: 'center',marginTop: 10,},
+  loginButtonText: {color: 'white',fontSize: 16,fontWeight: 'bold',},
   signupContainer: {flexDirection: 'row',justifyContent: 'center',marginTop: 20,},
   signupText: {fontSize: 17,color: '#333',},
-  signupLink: {fontSize: 17,color: 'blue',fontWeight: 'bold',},
+  signupLink: {fontSize: 17,color: '#191970',fontWeight: 'bold',},
 });
+
