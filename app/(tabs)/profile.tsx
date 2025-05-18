@@ -43,7 +43,7 @@ export default function UserProfile() {
 
   return ( //scrollview -> scrollable
     <ScrollView contentContainerStyle={styles.container}> 
-      <Text style={styles.header}>User Profile & Goal Setting</Text>
+      <Text style={styles.header}>Profile</Text>
       <Text style={styles.label}>Age</Text>
       <TextInput
         style={styles.input}
