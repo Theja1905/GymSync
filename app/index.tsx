@@ -17,18 +17,19 @@ export default function Index() {
         <Image
         source={{ uri: 'https://static.vecteezy.com/system/resources/previews/029/128/904/original/cute-cat-wave-hand-cartoon-doodle-flat-style-png.png' }}  // Add this
         style={styles.image}
-      />
+      /> 
         <Text style={styles.title}>Hello! Let's Get Started!</Text>
-        <View style={styles.buttonContainer}>
-          <Button title="Log In" onPress={() => router.push('/login')} />
+        <View style={styles.buttonContainer}> 
+          <Button title="LOG IN" onPress={() => router.replace('/login')} /> 
         </View>
         <View style={styles.buttonContainer}>
-          <Button title="Sign Up" onPress={() => router.push('/signup')} />
+          <Button title="SIGN UP" onPress={() => router.push('/signup')} />
         </View>
       </View>
     </>
   );
-}
+} // reminder: router.push is allows the screens to stack up so you can go back 
+// but router.replace means you cant go back to prev page
 
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 20 },

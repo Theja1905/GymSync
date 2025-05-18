@@ -18,6 +18,8 @@ export default function TabsLayout() {
 
         return {
           headerShown: false, // hide top header to remove (tabs) title
+          headerBackVisible: false, // remove the "<" back arrow
+          gestureEnabled: false,    // disable iOS swipe-back
           tabBarActiveTintColor: '#4a90e2',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name={iconName} size={size} color={color} />
@@ -27,11 +29,11 @@ export default function TabsLayout() {
     >
       <Tabs.Screen
         name="home"
-        options={{ title: 'Home' }}
+        options={{ title: 'Home' , headerShown: false,}}
       />
       <Tabs.Screen
         name="profile"
-        options={{ title: 'Profile' }}
+        options={{ title: 'Profile', headerShown: false,}}
       />
     </Tabs>
   );
