@@ -8,8 +8,8 @@ export default function TabsLayout() {
       screenOptions={({ route }) => {
         let iconName: React.ComponentProps<typeof Ionicons>['name'];
 
-        if (route.name === 'home') {
-          iconName = 'home-outline';
+        if (route.name === 'logger') {
+          iconName = 'barbell-outline';
         } else if (route.name === 'profile') {
           iconName = 'person-outline';
         } else {
@@ -28,8 +28,8 @@ export default function TabsLayout() {
       }}
     >
       <Tabs.Screen
-        name="home"
-        options={{ title: 'Home' , headerShown: false,}}
+        name="logger"
+        options={{ title: 'Workout Logger' , headerShown: false,}}
       />
       <Tabs.Screen
         name="profile"
