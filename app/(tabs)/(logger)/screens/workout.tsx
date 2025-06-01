@@ -1,6 +1,6 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
+import React from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function WorkoutScreen() {
   const router = useRouter();
@@ -12,7 +12,7 @@ export default function WorkoutScreen() {
       {/* Example UI elements */}
       <TouchableOpacity
         style={styles.button}
-        onPress={() => router.push('../(tabs)/logger/screens/timer')}
+        onPress={() => router.push('/screens/timer')}
       >
         <Text style={styles.buttonText}>Go to Timer</Text>
       </TouchableOpacity>

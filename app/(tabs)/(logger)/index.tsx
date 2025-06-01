@@ -1,7 +1,7 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
-import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import React from 'react';
+import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 // Define the structure of a workout log
 type WorkoutLog = {
@@ -40,7 +40,7 @@ export default function WorkoutLoggerScreen() {
 
       <TouchableOpacity
         style={styles.startButton}
-        onPress={() => router.push('../(tabs)/logger/screens/workout')}
+        onPress={() => router.push('/screens/workout')}
       >
         <Text style={styles.startButtonText}>Start Workout</Text>
       </TouchableOpacity>
