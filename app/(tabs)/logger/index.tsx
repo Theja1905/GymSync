@@ -40,7 +40,7 @@ export default function WorkoutLoggerScreen() {
 
       <TouchableOpacity
         style={styles.startButton}
-        onPress={() => router.push('/screens/workout')}
+        onPress={() => router.push('/logger/screens/workout')}
       >
         <Text style={styles.startButtonText}>Start Workout</Text>
       </TouchableOpacity>

@@ -12,7 +12,7 @@ export default function WorkoutScreen() {
       {/* Example UI elements */}
       <TouchableOpacity
         style={styles.button}
-        onPress={() => router.push('/screens/timer')}
+        onPress={() => router.push('/logger/screens/timer')}
       >
         <Text style={styles.buttonText}>Go to Timer</Text>
       </TouchableOpacity>
