@@ -3,11 +3,17 @@
 // https://firebase.google.com/docs/web/setup#available-libraries
 
 // firebase.js
+<<<<<<< HEAD
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getApp, getApps, initializeApp } from 'firebase/app';
 import { getReactNativePersistence, initializeAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
+=======
+import { initializeApp } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
+>>>>>>> e843ab2694311fb4ab599cb4eb3caf6c8fb2b725
 
+// Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: 'AIzaSyCeF82pnOO0Xk90afb4fI6u8XPBXAv_E18',
   authDomain: 'gymsync-125a5.firebaseapp.com',
@@ -17,14 +23,13 @@ const firebaseConfig = {
   appId: '1:648350050567:web:36af206b7ba8949a20bda2',
 };
 
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
 
-const auth = initializeAuth(app, {
-  persistence: getReactNativePersistence(AsyncStorage),
-});
+// Initialize Firebase Auth
+const auth = getAuth(app);
 
 const db = getFirestore(app);
 
 export { auth, db };
-
 
