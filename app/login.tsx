@@ -1,8 +1,14 @@
 import { useRouter } from 'expo-router';
-import { signInWithEmailAndPassword } from 'firebase/auth';
 import React, { useState } from 'react';
-import { ActivityIndicator, Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { auth } from '../firebase';
+import {
+  ActivityIndicator,
+  Alert,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -15,40 +21,24 @@ export default function LoginScreen() {
     return re.test(email);
   };
 
-  const handleLogin = async () => {
+  const handleLogin = () => {
     if (!email || !password) {
       Alert.alert('Error', 'Please enter email and password');
       return;
     }
-    
     if (!validateEmail(email)) {
       Alert.alert('Error', 'Please enter a valid email address');
       return;
     }
 
-    try {
-      setLoading(true);
-      await signInWithEmailAndPassword(auth, email, password);
-      router.replace('/(tabs)/profile');
-    } catch (error: any) {
-      let errorMessage = 'Login failed. Please try again.';
-      
-      switch (error.code) {
-        case 'auth/invalid-email':
-          errorMessage = 'Invalid email address';
-          break;
-        case 'auth/user-not-found':
-          errorMessage = 'No account found with this email';
-          break;
-        case 'auth/wrong-password':
-          errorMessage = 'Incorrect password';
-          break;
-      }
-      
-      Alert.alert('Login Error', errorMessage);
-    } finally {
+    setLoading(true);
+
+    // Simulate async login API call
+    setTimeout(() => {
       setLoading(false);
-    }
+      Alert.alert('Success', 'Login successful!');
+      router.replace('/(tabs)/profile');
+    }, 1500);
   };
 
   return (
@@ -108,3 +98,4 @@ const styles = StyleSheet.create({
   signupText: {fontSize: 17,color: '#333',},
   signupLink: {fontSize: 17,color: '#191970',fontWeight: 'bold',},
 });
+
