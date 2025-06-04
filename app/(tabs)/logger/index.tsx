@@ -1,13 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
-import React, { useState, useCallback } from 'react';
-import {
-  FlatList,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useCallback, useState } from 'react';
+import { FlatList, StyleSheet, Text, TouchableOpacity, View, } from 'react-native';
 
 type WorkoutLog = {
   date: string;
@@ -93,36 +87,17 @@ export default function WorkoutLoggerScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: '#fff' },
-  title: { fontSize: 28, fontWeight: 'bold' },
+  container: { flex: 1, paddingTop: 90, padding: 25, backgroundColor: '#fff' },
+  title: { fontSize: 35, fontWeight: 'bold' },
   subtitle: { color: '#666', marginBottom: 10 },
-  startButton: {
-    backgroundColor: '#4a90e2',
-    padding: 12,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginBottom: 20,
-  },
+  startButton: {backgroundColor: '#4a90e2',padding: 12,borderRadius: 10,alignItems: 'center',marginBottom: 20,},
   startButtonText: { color: '#fff', fontWeight: '600' },
-  loggerTitle: { fontSize: 22, fontWeight: 'bold', marginBottom: 10 },
-  card: {
-    backgroundColor: '#f9f9f9',
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 10,
-  },
+  loggerTitle: { fontSize: 35, fontWeight: 'bold', marginBottom: 10 },
+  card: {backgroundColor: '#f9f9f9',padding: 15,borderRadius: 10,marginBottom: 10,},
   dateText: { fontWeight: 'bold' },
   durationRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 5 },
   durationText: { marginLeft: 5 },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 10,
-  },
+  headerRow: {flexDirection: 'row',justifyContent: 'space-between',marginTop: 10,},
   columnTitle: { fontWeight: 'bold' },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 3,
-  },
+  row: {flexDirection: 'row',justifyContent: 'space-between',paddingVertical: 3,},
 });
