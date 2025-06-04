@@ -1,4 +1,5 @@
 import { useRouter } from 'expo-router';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
@@ -9,6 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { auth } from '../firebase'; // ✅ correct relative path
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -21,7 +23,7 @@ export default function LoginScreen() {
     return re.test(email);
   };
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert('Error', 'Please enter email and password');
       return;
@@ -32,13 +34,14 @@ export default function LoginScreen() {
     }
 
     setLoading(true);
-
-    // Simulate async login API call
-    setTimeout(() => {
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
       setLoading(false);
-      Alert.alert('Success', 'Login successful!');
       router.replace('/(tabs)/profile');
-    }, 1500);
+    } catch (error: any) {
+      setLoading(false);
+      Alert.alert('Login Error', error.message);
+    }
   };
 
   return (
@@ -88,14 +91,13 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {flex: 1,justifyContent: 'center',paddingHorizontal: 20,backgroundColor: '#FFFFFF',},
-  inputGroup: {marginBottom: 15,},
-  label: {fontSize: 16,fontWeight: '600',marginBottom: 5,color: '#333',},
-  input: {height: 50,borderWidth: 1,borderColor: '#ccc',borderRadius: 8,paddingHorizontal: 10,fontSize: 16,backgroundColor: '#fff',},
-  loginButton: {backgroundColor: '#191970',paddingVertical: 14,borderRadius: 8,alignItems: 'center',marginTop: 10,},
-  loginButtonText: {color: 'white',fontSize: 16,fontWeight: 'bold',},
-  signupContainer: {flexDirection: 'row',justifyContent: 'center',marginTop: 20,},
-  signupText: {fontSize: 17,color: '#333',},
-  signupLink: {fontSize: 17,color: '#191970',fontWeight: 'bold',},
+  container: { flex: 1, justifyContent: 'center', paddingHorizontal: 20, backgroundColor: '#FFFFFF' },
+  inputGroup: { marginBottom: 15 },
+  label: { fontSize: 16, fontWeight: '600', marginBottom: 5, color: '#333' },
+  input: { height: 50, borderWidth: 1, borderColor: '#ccc', borderRadius: 8, paddingHorizontal: 10, fontSize: 16, backgroundColor: '#fff' },
+  loginButton: { backgroundColor: '#191970', paddingVertical: 14, borderRadius: 8, alignItems: 'center', marginTop: 10 },
+  loginButtonText: { color: 'white', fontSize: 16, fontWeight: 'bold' },
+  signupContainer: { flexDirection: 'row', justifyContent: 'center', marginTop: 20 },
+  signupText: { fontSize: 17, color: '#333' },
+  signupLink: { fontSize: 17, color: '#191970', fontWeight: 'bold' },
 });
-
