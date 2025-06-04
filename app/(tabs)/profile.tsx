@@ -10,8 +10,6 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { db, auth } from '../../firebase';
-import { doc, setDoc } from 'firebase/firestore';
 
 const fitnessLevels = ['Beginner', 'Intermediate', 'Advanced'] as const;
 const workoutFocusOptions = ['Strength', 'Cardio', 'Flexibility'] as const;
@@ -38,13 +36,7 @@ export default function UserProfile() {
     }
   };
 
-  const onSave = async () => {
-    const userId = auth.currentUser?.uid;
-    if (!userId) {
-      Alert.alert('Error', 'User not logged in.');
-      return;
-    }
-
+  const onSave = () => {
     const profileData = {
       age,
       weight,
@@ -54,14 +46,9 @@ export default function UserProfile() {
       goal,
       workoutFrequency,
     };
-
-    try {
-      await setDoc(doc(db, 'users', userId), profileData);
-      Alert.alert('Success', 'Profile saved to Firebase!');
-    } catch (error: any) {
-      console.error('Error saving profile:', error);
-      Alert.alert('Error', 'Could not save profile. Please try again.');
-    }
+    console.log('Profile saved:', profileData);
+    Alert.alert('Success', 'Profile saved successfully!');
+    // TODO: Save to context or AsyncStorage later
   };
 
   return (
@@ -181,28 +168,13 @@ export default function UserProfile() {
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 20, paddingBottom: 40, backgroundColor: '#fff' },
-  header: { fontSize: 28, fontWeight: '700', marginBottom: 30, textAlign: 'center' },
-  label: { fontSize: 16, marginTop: 15, marginBottom: 8, fontWeight: '600', color: '#333' },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    borderRadius: 8,
-    fontSize: 16,
-  },
-  pickerContainer: { flexDirection: 'row', flexWrap: 'wrap' },
-  pickerOption: {
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#aaa',
-    marginRight: 10,
-    marginBottom: 10,
-  },
-  pickerOptionSelected: { backgroundColor: '#4a90e2', borderColor: '#4a90e2' },
-  pickerOptionText: { color: '#555', fontWeight: '600' },
-  pickerOptionTextSelected: { color: '#fff' },
+  container: {padding: 20,paddingBottom: 40,backgroundColor: '#fff',},
+  header: {fontSize: 28,fontWeight: '700',marginBottom: 30,textAlign: 'center',},
+  label: {fontSize: 16,marginTop: 15,marginBottom: 8,fontWeight: '600',color: '#333',},
+  input: {borderWidth: 1,borderColor: '#ccc',paddingHorizontal: 15,paddingVertical: 10,borderRadius: 8,fontSize: 16,},
+  pickerContainer: {flexDirection: 'row',flexWrap: 'wrap',},
+  pickerOption: {paddingHorizontal: 15,paddingVertical: 8,borderRadius: 20,borderWidth: 1,borderColor: '#aaa',marginRight: 10,marginBottom: 10,},
+  pickerOptionSelected: {backgroundColor: '#4a90e2',borderColor: '#4a90e2',},
+  pickerOptionText: {color: '#555',fontWeight: '600',},
+  pickerOptionTextSelected: {color: '#fff',},
 });
