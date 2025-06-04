@@ -1,9 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import React from 'react';
-import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
+import React, { useState, useCallback } from 'react';
+import {
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
-// Define the structure of a workout log
 type WorkoutLog = {
   date: string;
   duration: number;
@@ -13,25 +18,38 @@ type WorkoutLog = {
   }[];
 };
 
-// Example data (can be empty initially)
-const workoutLogs: WorkoutLog[] = [
-  {
-    date: '2024-05-25',
-    duration: 45,
-    exercises: [
-      { name: 'Push-ups', sets: 3 },
-      { name: 'Squats', sets: 4 },
-    ],
-  },
-  {
-    date: '2024-05-26',
-    duration: 30,
-    exercises: [{ name: 'Running', sets: 1 }],
-  },
-];
-
 export default function WorkoutLoggerScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams();
+
+  const [workoutLogs, setWorkoutLogs] = useState<WorkoutLog[]>([]);
+
+  useFocusEffect(
+    useCallback(() => {
+      const { routineTitle, exercises, duration } = params;
+
+      if (routineTitle && exercises && duration) {
+        const parsedExercises =
+          typeof exercises === 'string' ? JSON.parse(exercises) : [];
+
+        const durationMinutes =
+          typeof duration === 'string'
+            ? parseInt(duration.split(':')[0])
+            : 0;
+
+        const newLog: WorkoutLog = {
+          date: new Date().toISOString().split('T')[0],
+          duration: durationMinutes,
+          exercises: parsedExercises.map((ex: any) => ({
+            name: ex.name,
+            sets: parseInt(ex.sets),
+          })),
+        };
+
+        setWorkoutLogs((prev) => [newLog, ...prev]);
+      }
+    }, [params])
+  );
 
   return (
     <View style={styles.container}>
