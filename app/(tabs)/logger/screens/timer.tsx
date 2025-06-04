@@ -1,35 +1,80 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 
 export default function TimerScreen() {
   const router = useRouter();
+  const { routineTitle, exercises } = useLocalSearchParams();
+
+  const [seconds, setSeconds] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => setSeconds((prev) => prev + 1), 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const formatTime = () => {
+    const mins = String(Math.floor(seconds / 60)).padStart(2, '0');
+    const secs = String(seconds % 60).padStart(2, '0');
+    return `${mins} : ${secs}`;
+  };
+
+  const handleFinishWorkout = () => {
+    // Pass workout summary to logger
+    router.push({
+      pathname: '/logger',
+      params: {
+        routineTitle,
+        exercises,
+        duration: formatTime(),
+      },
+    });
+  };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Workout Timer</Text>
+      <Text style={styles.title}>Workout Ongoing</Text>
+      <Text style={styles.icon}>🕒🏋️</Text>
 
-      {/* Example timer text */}
-      <Text style={styles.timer}>00:30</Text>
+      <View style={styles.timerWrapper}>
+        <Text style={styles.timerText}>{formatTime()}</Text>
+      </View>
 
       <TouchableOpacity
-        style={styles.button}
-        onPress={() => router.back()}
+        style={styles.finishButton}
+        onPress={handleFinishWorkout}
       >
-        <Text style={styles.buttonText}>Back to Workout</Text>
+        <Text style={styles.finishText}>Finish Workout</Text>
       </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 10 },
-  timer: { fontSize: 48, fontWeight: 'bold', marginVertical: 20 },
-  button: {
-    backgroundColor: '#4a90e2',
-    padding: 12,
-    borderRadius: 8,
+  container: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' },
+  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20 },
+  icon: { fontSize: 64, marginBottom: 30 },
+  timerWrapper: {
+    backgroundColor: '#e0e0e0',
+    paddingVertical: 10,
+    paddingHorizontal: 30,
+    borderRadius: 25,
+    marginBottom: 40,
   },
-  buttonText: { color: '#fff' },
+  timerText: {
+    fontSize: 32,
+    fontWeight: '600',
+    color: '#333',
+  },
+  finishButton: {
+    backgroundColor: '#28a745',
+    paddingVertical: 14,
+    paddingHorizontal: 40,
+    borderRadius: 25,
+  },
+  finishText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
 });
