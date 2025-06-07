@@ -1,8 +1,6 @@
-import React, { useState } from 'react';
-
+import React, { useState, useEffect } from 'react';
 import {
   Alert,
-  Button,
   ScrollView,
   StyleSheet,
   Text,
@@ -11,9 +9,8 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { db } from '../../firebase'; // adjust the path if needed
-import { doc, setDoc } from 'firebase/firestore';
-import { auth } from '../../firebase'; // assuming user is signed in
+import { db, auth } from '../../firebase';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 
 const fitnessLevels = ['Beginner', 'Intermediate', 'Advanced'] as const;
 const workoutFocusOptions = ['Strength', 'Cardio', 'Flexibility'] as const;
@@ -33,12 +30,39 @@ export default function UserProfile() {
   const [workoutFrequency, setWorkoutFrequency] = useState<string>('');
 
   const toggleFocus = (focus: WorkoutFocus) => {
-    if (workoutFocus.includes(focus)) {
-      setWorkoutFocus(workoutFocus.filter((f) => f !== focus));
-    } else {
-      setWorkoutFocus([...workoutFocus, focus]);
-    }
+    setWorkoutFocus((prev) =>
+      prev.includes(focus)
+        ? prev.filter((f) => f !== focus)
+        : [...prev, focus]
+    );
   };
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const user = auth.currentUser;
+      if (!user) return;
+
+      try {
+        const docRef = doc(db, 'profiles', user.uid);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setAge(data.age || '');
+          setWeight(data.weight || '');
+          setHeight(data.height || '');
+          setFitnessLevel(data.fitnessLevel || fitnessLevels[0]);
+          setWorkoutFocus(data.workoutFocus || []);
+          setGoal(data.goal || fitnessGoals[0]);
+          setWorkoutFrequency(data.workoutFrequency || '');
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+      }
+    };
+
+    fetchProfile();
+  }, []);
 
   const onSave = async () => {
     const user = auth.currentUser;
@@ -55,7 +79,7 @@ export default function UserProfile() {
       workoutFocus,
       goal,
       workoutFrequency,
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     };
 
     try {
@@ -66,7 +90,6 @@ export default function UserProfile() {
       Alert.alert('Error', 'Failed to save profile.');
     }
   };
-
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
@@ -178,20 +201,79 @@ export default function UserProfile() {
           onChangeText={setWorkoutFrequency}
         />
 
-        <Button title="Save Profile" onPress={onSave} />
+        <TouchableOpacity style={styles.saveButton} onPress={onSave}>
+          <Text style={styles.saveButtonText}>Save Profile</Text>
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {padding: 20,paddingBottom: 40,backgroundColor: '#fff',},
-  header: {fontSize: 28,fontWeight: '700',marginBottom: 30,textAlign: 'center',},
-  label: {fontSize: 16,marginTop: 15,marginBottom: 8,fontWeight: '600',color: '#333',},
-  input: {borderWidth: 1,borderColor: '#ccc',paddingHorizontal: 15,paddingVertical: 10,borderRadius: 8,fontSize: 16,},
-  pickerContainer: {flexDirection: 'row',flexWrap: 'wrap',},
-  pickerOption: {paddingHorizontal: 15,paddingVertical: 8,borderRadius: 20,borderWidth: 1,borderColor: '#aaa',marginRight: 10,marginBottom: 10,},
-  pickerOptionSelected: {backgroundColor: '#4a90e2',borderColor: '#4a90e2',},
-  pickerOptionText: {color: '#555',fontWeight: '600',},
-  pickerOptionTextSelected: {color: '#fff',},
+  container: {
+    padding: 20,
+    paddingBottom: 40,
+    backgroundColor: '#fff',
+  },
+  header: {
+    fontSize: 28,
+    fontWeight: '700',
+    marginBottom: 5,
+    textAlign: 'left',
+  },
+  label: {
+    fontSize: 16,
+    marginTop: 15,
+    marginBottom: 8,
+    fontWeight: '600',
+    color: '#333',
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderRadius: 8,
+    fontSize: 16,
+  },
+  pickerContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  pickerOption: {
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#aaa',
+    marginRight: 10,
+    marginBottom: 10,
+  },
+  pickerOptionSelected: {
+    backgroundColor: '#4a90e2',
+    borderColor: '#4a90e2',
+  },
+  pickerOptionText: {
+    color: '#555',
+    fontWeight: '600',
+  },
+  pickerOptionTextSelected: {
+    color: '#fff',
+  },
+  saveButton: {
+    marginTop: 30,
+    backgroundColor: '#4a90e2',
+    paddingVertical: 11,
+    width: 260,
+    borderRadius: 15,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    alignSelf: 'center'
+  },
+  saveButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#f9f9f9',
+  },
 });
