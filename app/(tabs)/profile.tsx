@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+
 import {
   Alert,
   Button,
@@ -10,6 +11,9 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { db } from '../../firebase'; // adjust the path if needed
+import { doc, setDoc } from 'firebase/firestore';
+import { auth } from '../../firebase'; // assuming user is signed in
 
 const fitnessLevels = ['Beginner', 'Intermediate', 'Advanced'] as const;
 const workoutFocusOptions = ['Strength', 'Cardio', 'Flexibility'] as const;
@@ -36,7 +40,13 @@ export default function UserProfile() {
     }
   };
 
-  const onSave = () => {
+  const onSave = async () => {
+    const user = auth.currentUser;
+    if (!user) {
+      Alert.alert('Error', 'User not logged in.');
+      return;
+    }
+
     const profileData = {
       age,
       weight,
@@ -45,11 +55,18 @@ export default function UserProfile() {
       workoutFocus,
       goal,
       workoutFrequency,
+      updatedAt: new Date().toISOString()
     };
-    console.log('Profile saved:', profileData);
-    Alert.alert('Success', 'Profile saved successfully!');
-    // TODO: Save to context or AsyncStorage later
+
+    try {
+      await setDoc(doc(db, 'profiles', user.uid), profileData);
+      Alert.alert('Success', 'Profile saved successfully!');
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      Alert.alert('Error', 'Failed to save profile.');
+    }
   };
+
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>

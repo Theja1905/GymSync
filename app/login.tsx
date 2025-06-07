@@ -10,7 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { auth } from '../firebase'; // Adjust path if needed
+import { auth } from '../firebase'; 
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -36,9 +36,10 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
+
       setLoading(false);
       Alert.alert('Success', 'Login successful!');
-      router.replace('/(tabs)/profile');
+      router.replace('/(tabs)/profile'); // or wherever you want to go after login
     } catch (err) {
       setLoading(false);
       if (err instanceof Error) {
@@ -48,6 +49,7 @@ export default function LoginScreen() {
       }
     }
   };
+
 
   return (
     <View style={styles.container}>

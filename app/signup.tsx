@@ -11,6 +11,9 @@ import {
   View,
 } from 'react-native';
 import { auth } from '../firebase'; // Adjust the path if needed
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../firebase'; // adjust if needed
+
 
 const SignupScreen = () => {
   const router = useRouter();
@@ -40,7 +43,17 @@ const SignupScreen = () => {
 
     setLoading(true);
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      // Create user in Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Create user document in Firestore
+      await setDoc(doc(db, 'users', user.uid), {
+        fullName: fullName,
+        email: email,
+        createdAt: serverTimestamp(),
+      });
+
       setLoading(false);
       Alert.alert('Success', 'Signup successful!');
       router.replace('/(tabs)/profile');
