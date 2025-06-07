@@ -54,7 +54,9 @@ export default function WorkoutScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView style={styles.scrollView}
+      contentContainerStyle={styles.container}
+    >
       <Text style={styles.title}>Add Exercises</Text>
 
       <TextInput
@@ -125,6 +127,7 @@ export default function WorkoutScreen() {
 }
 
 const styles = StyleSheet.create({
+  scrollView: {flex: 1,backgroundColor: '#fff',},
   container: {paddingTop: 80,paddingHorizontal: 24,backgroundColor: '#fff',paddingBottom: 40,alignItems: 'stretch',},
   title: {fontSize: 32,fontWeight: '700',marginBottom: 20,color: '#111',fontFamily: 'System',},
   routineInput: {borderWidth: 1,borderColor: '#ccc',paddingVertical: 14,paddingHorizontal: 16,borderRadius: 12,marginBottom: 24,fontSize: 16,fontFamily: 'System',backgroundColor: '#fafafa',},

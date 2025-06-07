@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View, } from 'react-native';
 
@@ -31,6 +32,7 @@ const exampleTemplates: Template[] = [
 ];
 
 export default function TemplatesScreen() {
+  const router = useRouter();
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
 
