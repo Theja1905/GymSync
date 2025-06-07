@@ -60,10 +60,8 @@ export default function WorkoutScreen() {
     };
 
     try {
-      // Save workout routine + exercises to Firestore collection "workouts"
       const docRef = await addDoc(collection(db, 'workouts'), workoutData);
 
-      // After saving, navigate to Timer screen
       router.push({
         pathname: '/logger/screens/timer',
         params: {
@@ -71,7 +69,7 @@ export default function WorkoutScreen() {
           exercises: JSON.stringify(
             workoutData.exercises.map(({ name, sets }) => ({ name, sets }))
           ),
-          workoutId: docRef.id, // Optional: pass Firestore doc ID if needed
+          workoutId: docRef.id,
         },
       });
     } catch (error) {
@@ -81,80 +79,98 @@ export default function WorkoutScreen() {
   };
 
   return (
-    <ScrollView style={styles.scrollView} contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Add Exercises</Text>
+    <View style={styles.page}>
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.container}>
+        <Text style={styles.title}>Add Exercises</Text>
 
-      <TextInput
-        style={styles.routineInput}
-        placeholder="Workout Routine Title"
-        value={routineTitle}
-        onChangeText={setRoutineTitle}
-      />
+        <TextInput
+          style={styles.routineInput}
+          placeholder="Workout Routine Title"
+          value={routineTitle}
+          onChangeText={setRoutineTitle}
+        />
 
-      <View style={styles.card}>
-        <View style={styles.headerRow}>
-          <Text style={styles.headerText}>Exercise</Text>
-          <Text style={styles.headerText}>Reps</Text>
-          <Text style={styles.headerText}>Sets</Text>
-        </View>
-
-        {exercises.map((exercise) => (
-          <View style={styles.inputRow} key={exercise.id}>
-            <TextInput
-              style={styles.inputExercise}
-              placeholder="Type"
-              value={exercise.name}
-              onChangeText={(text) => updateExercise(exercise.id, 'name', text)}
-            />
-            <TextInput
-              style={styles.inputSmall}
-              placeholder="Reps"
-              value={exercise.reps}
-              keyboardType="numeric"
-              onChangeText={(text) => updateExercise(exercise.id, 'reps', text)}
-            />
-            <TextInput
-              style={styles.inputSmall}
-              placeholder="Sets"
-              value={exercise.sets}
-              keyboardType="numeric"
-              onChangeText={(text) => updateExercise(exercise.id, 'sets', text)}
-            />
+        <View style={styles.card}>
+          <View style={styles.headerRow}>
+            <Text style={styles.headerText}>Exercise</Text>
+            <Text style={styles.headerText}>Reps</Text>
+            <Text style={styles.headerText}>Sets</Text>
           </View>
-        ))}
 
-        <TouchableOpacity style={styles.addButton} onPress={addExerciseRow}>
-          <Text style={styles.addButtonText}>＋ Add Exercise</Text>
+          {exercises.map((exercise) => (
+            <View style={styles.inputRow} key={exercise.id}>
+              <TextInput
+                style={styles.inputExercise}
+                placeholder="Type"
+                value={exercise.name}
+                onChangeText={(text) => updateExercise(exercise.id, 'name', text)}
+              />
+              <TextInput
+                style={styles.inputSmall}
+                placeholder="Reps"
+                value={exercise.reps}
+                keyboardType="numeric"
+                onChangeText={(text) => updateExercise(exercise.id, 'reps', text)}
+              />
+              <TextInput
+                style={styles.inputSmall}
+                placeholder="Sets"
+                value={exercise.sets}
+                keyboardType="numeric"
+                onChangeText={(text) => updateExercise(exercise.id, 'sets', text)}
+              />
+            </View>
+          ))}
+
+          <TouchableOpacity style={styles.addButton} onPress={addExerciseRow}>
+            <Text style={styles.addButtonText}>＋ Add Exercise</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+
+      {/* Fixed Footer Buttons */}
+      <View style={styles.footer}>
+        <TouchableOpacity style={styles.timerButton} onPress={handleStartTimer}>
+          <Text style={styles.timerText}>Start Timer</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.timerButton, styles.backButton]}
+          onPress={() => router.back()}
+        >
+          <Text style={styles.timerText}>Back to Logger</Text>
         </TouchableOpacity>
       </View>
-
-      <TouchableOpacity style={styles.timerButton} onPress={handleStartTimer}>
-        <Text style={styles.timerText}>Start Timer</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={[styles.timerButton, styles.backButton]} onPress={() => router.back()}>
-        <Text style={styles.timerText}>Back to Logger</Text>
-      </TouchableOpacity>
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  scrollView: { flex: 1, backgroundColor: '#fff' },
+  page: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  scrollView: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
   container: {
     paddingTop: 80,
     paddingHorizontal: 24,
-    paddingBottom: 40,
+    paddingBottom: 40, // leave space above fixed buttons
     alignItems: 'stretch',
-    backgroundColor: '#fff',
   },
-  title: { fontSize: 32, fontWeight: '700', marginBottom: 20 },
+  title: {
+    fontSize: 32,
+    fontWeight: '700',
+    marginBottom: 20,
+  },
   routineInput: {
     borderWidth: 1,
     borderColor: '#ccc',
     paddingVertical: 14,
     paddingHorizontal: 16,
-    borderRadius: 12,
+    borderRadius: 30,
     marginBottom: 24,
     fontSize: 16,
     backgroundColor: '#fafafa',
@@ -174,13 +190,22 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderColor: '#eee',
   },
-  headerText: { fontWeight: '700', width: '30%', textAlign: 'center' },
-  inputRow: { flexDirection: 'row', alignItems: 'center', marginTop: 15 },
+  headerText: {
+    fontWeight: '500',
+    width: '30%',
+    fontSize: 18,
+    textAlign: 'center',
+  },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 15,
+  },
   inputExercise: {
     flex: 2,
     borderWidth: 1,
     borderColor: '#ddd',
-    borderRadius: 10,
+    borderRadius: 30,
     paddingVertical: 10,
     paddingHorizontal: 14,
     marginRight: 12,
@@ -191,7 +216,7 @@ const styles = StyleSheet.create({
     flex: 1,
     borderWidth: 1,
     borderColor: '#ddd',
-    borderRadius: 10,
+    borderRadius: 30,
     paddingVertical: 10,
     paddingHorizontal: 12,
     marginRight: 12,
@@ -202,20 +227,35 @@ const styles = StyleSheet.create({
     marginTop: 20,
     alignSelf: 'flex-start',
     paddingVertical: 10,
-    paddingHorizontal: 18,
+    paddingHorizontal: 100,
     backgroundColor: '#e0f0ff',
-    borderRadius: 12,
+    borderRadius: 30,
   },
-  addButtonText: { fontSize: 16, fontWeight: '600', color: '#007AFF' },
+  addButtonText: {
+    fontSize: 16,
+    fontWeight: '400',
+    color: '#007AFF',
+  },
+  footer: {
+    paddingHorizontal: 24,
+    paddingBottom: 20,
+    paddingTop: 10,
+    backgroundColor: '#fff',
+
+  },
   timerButton: {
-    backgroundColor: '#191970',
-    paddingVertical: 16,
-    borderRadius: 14,
+    backgroundColor: '#4a90e2',
+    paddingVertical: 10,
+    borderRadius: 20,
     alignItems: 'center',
     marginBottom: 12,
   },
   backButton: {
-    backgroundColor: '#555',
+    backgroundColor: '#BBBBBB',
   },
-  timerText: { color: '#fff', fontWeight: '700', fontSize: 17 },
+  timerText: {
+    color: '#fff',
+    fontWeight: '400',
+    fontSize: 17,
+  },
 });

@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
   modalContent: {flexDirection: 'row',justifyContent: 'space-between',marginBottom: 20,},
   column: {flex: 1,},
   columnHeader: {fontWeight: 'bold',marginBottom: 8,},
-  startButton: {backgroundColor: '#4a90e2',paddingVertical: 12,borderRadius: 12,alignItems: 'center',marginTop: 8,},
+  startButton: {backgroundColor: '#4a90e2',paddingVertical: 15,borderRadius: 12,alignItems: 'center',marginTop: 8,},
   startButtonText: {color: '#fff',fontWeight: '600',},
   modalClose: {position: 'absolute',top: 10,right: 16,fontSize: 20,color: '#999',},
 });

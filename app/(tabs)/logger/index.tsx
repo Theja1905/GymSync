@@ -2,10 +2,11 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { collection, onSnapshot, orderBy, query, where } from 'firebase/firestore';
 import React, { useCallback, useState } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { auth, db } from '../../../firebase';
 
 type WorkoutLog = {
-  id: string; // Add id field for keys
+  id: string;
   date: string;
   duration: number;
   exercises: {
@@ -22,7 +23,6 @@ export default function WorkoutLoggerScreen() {
     useCallback(() => {
       if (!auth.currentUser) return;
 
-      // Query workouts for current user, ordered by createdAt descending
       const q = query(
         collection(db, 'workouts'),
         where('userId', '==', auth.currentUser.uid),
@@ -48,14 +48,14 @@ export default function WorkoutLoggerScreen() {
   );
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Text style={styles.title}>Start Workout</Text>
       <Text style={styles.subtitle}>Quick Start</Text>
 
       <TouchableOpacity
         style={styles.startButton}
         onPress={() => {
-          router.push('/logger/screens/workout'); // Adjust path to your workout/timer screen
+          router.push('/logger/screens/workout');
         }}
       >
         <Text style={styles.startButtonText}>Start Workout</Text>
@@ -90,22 +90,23 @@ export default function WorkoutLoggerScreen() {
           </Text>
         }
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingTop: 60, padding: 25, backgroundColor: '#fff' },
+  container: { flex: 1, padding: 20, backgroundColor: '#fff' },
   title: { fontSize: 35, fontWeight: 'bold' },
   subtitle: { color: '#666', marginBottom: 10 },
   startButton: {
     backgroundColor: '#4a90e2',
-    padding: 12,
-    borderRadius: 10,
+    paddingVertical: 7,
+    paddingHorizontal: 10,
+    borderRadius: 20,
     alignItems: 'center',
     marginBottom: 20,
   },
-  startButtonText: { color: '#fff', fontWeight: '600', fontSize: 18},
+  startButtonText: { color: '#fff', fontWeight: '600', fontSize: 16 },
   loggerTitle: { fontSize: 35, fontWeight: 'bold', marginBottom: 10 },
   card: {
     backgroundColor: '#f9f9f9',
