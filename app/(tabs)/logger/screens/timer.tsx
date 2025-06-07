@@ -1,59 +1,64 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { addDoc, collection, Timestamp } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { auth, db } from '../../../../firebase'; // Adjust this path if needed
 
 export default function TimerScreen() {
   const router = useRouter();
   const { routineTitle, exercises } = useLocalSearchParams();
 
+  const parsedExercises = exercises ? JSON.parse(exercises as string) : [];
+
   const [seconds, setSeconds] = useState(0);
+  const [isRunning, setIsRunning] = useState(true);
 
   useEffect(() => {
-    const interval = setInterval(() => setSeconds((prev) => prev + 1), 1000);
+    let interval: number;
+
+    if (isRunning) {
+      interval = setInterval(() => {
+        setSeconds((prev) => prev + 1);
+      }, 1000);
+    }
+
     return () => clearInterval(interval);
-  }, []);
+  }, [isRunning]);
 
   const formatTime = () => {
     const mins = String(Math.floor(seconds / 60)).padStart(2, '0');
     const secs = String(seconds % 60).padStart(2, '0');
-    return `${mins} : ${secs}`;
+    return `${mins}:${secs}`;
   };
 
-  const handleFinishWorkout = () => {
-    // Pass workout summary to logger
-    router.push({
-      pathname: '/logger',
-      params: {
+  const handleFinishWorkout = async () => {
+    setIsRunning(false);
+
+    try {
+      // Save workout to Firestore with userId and formatted date
+      await addDoc(collection(db, 'workouts'), {
         routineTitle,
-        exercises,
+        exercises: parsedExercises,
         duration: formatTime(),
-      },
-    });
+        createdAt: Timestamp.now(),
+        userId: auth.currentUser?.uid,
+        date: new Date().toLocaleDateString(), // Optional: format this as needed
+      });
+
+      // Navigate back to the logger screen
+      router.push('/logger');
+    } catch (error) {
+      console.error('Error saving workout: ', error);
+      // Optionally display error to user
+    }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Workout Ongoing</Text>
+      <Text style={styles.title}>Workout Timer</Text>
+      <Text style={styles.timer}>{formatTime()}</Text>
 
-      <View style={styles.iconWrapper}>
-        <Image
-          source={{ uri: 'https://static.vecteezy.com/system/resources/previews/019/923/746/non_2x/clock-face-icon-black-and-white-transparent-background-free-png.png' }}
-          style={styles.clockIcon}
-        />
-        <Image
-          source={{ uri: 'https://icon-library.com/images/dumbbell-icon-png/dumbbell-icon-png-27.jpg' }}
-          style={[styles.weightIcon, { marginLeft: 15 }]}
-        />
-      </View>
-
-      <View style={styles.timerWrapper}>
-        <Text style={styles.timerText}>{formatTime()}</Text>
-      </View>
-
-      <TouchableOpacity
-        style={styles.finishButton}
-        onPress={handleFinishWorkout}
-      >
+      <TouchableOpacity style={styles.finishButton} onPress={handleFinishWorkout}>
         <Text style={styles.finishText}>Finish Workout</Text>
       </TouchableOpacity>
     </View>
@@ -61,13 +66,14 @@ export default function TimerScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' },
-  title: { fontSize: 35, fontWeight: 'bold', marginBottom: 20},
-  iconWrapper: {flexDirection: 'column',marginBottom: 30,justifyContent: 'center',alignItems: 'center',},
-  clockIcon: {width: 130,height: 130,resizeMode: 'contain',marginBottom: -30,},
-  weightIcon: {width: 130,height: 130,resizeMode: 'contain',marginLeft: 15,},
-  timerWrapper: {backgroundColor: '#e0e0e0',paddingVertical: 10,paddingHorizontal: 30,borderRadius: 25,marginBottom: 40,},
-  timerText: {fontSize: 32,fontWeight: '600',color: '#333',},
-  finishButton: {backgroundColor: '#28a745',paddingVertical: 14,paddingHorizontal: 40,borderRadius: 25,},
-  finishText: {color: '#fff',fontSize: 16,fontWeight: '600',},
+  container: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' },
+  title: { fontSize: 32, fontWeight: 'bold', marginBottom: 20 },
+  timer: { fontSize: 48, fontWeight: 'bold', marginBottom: 40 },
+  finishButton: {
+    backgroundColor: '#4caf50',
+    paddingVertical: 14,
+    paddingHorizontal: 28,
+    borderRadius: 10,
+  },
+  finishText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
 });

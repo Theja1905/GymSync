@@ -1,9 +1,11 @@
-import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { collection, onSnapshot, orderBy, query, where } from 'firebase/firestore';
 import React, { useCallback, useState } from 'react';
-import { FlatList, StyleSheet, Text, TouchableOpacity, View, } from 'react-native';
+import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { auth, db } from '../../../firebase';
 
 type WorkoutLog = {
+  id: string; // Add id field for keys
   date: string;
   duration: number;
   exercises: {
@@ -13,36 +15,36 @@ type WorkoutLog = {
 };
 
 export default function WorkoutLoggerScreen() {
-  const router = useRouter();
-  const params = useLocalSearchParams();
-
   const [workoutLogs, setWorkoutLogs] = useState<WorkoutLog[]>([]);
+  const router = useRouter();
 
   useFocusEffect(
     useCallback(() => {
-      const { routineTitle, exercises, duration } = params;
+      if (!auth.currentUser) return;
 
-      if (routineTitle && exercises && duration) {
-        const parsedExercises =
-          typeof exercises === 'string' ? JSON.parse(exercises) : [];
+      // Query workouts for current user, ordered by createdAt descending
+      const q = query(
+        collection(db, 'workouts'),
+        where('userId', '==', auth.currentUser.uid),
+        orderBy('createdAt', 'desc')
+      );
 
-        const durationMinutes =
-          typeof duration === 'string'
-            ? parseInt(duration.split(':')[0])
-            : 0;
+      const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const logs: WorkoutLog[] = [];
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          logs.push({
+            id: doc.id,
+            date: data.date,
+            duration: data.duration,
+            exercises: data.exercises,
+          });
+        });
+        setWorkoutLogs(logs);
+      });
 
-        const newLog: WorkoutLog = {
-          date: new Date().toISOString().split('T')[0],
-          duration: durationMinutes,
-          exercises: parsedExercises.map((ex: any) => ({
-            name: ex.name,
-            sets: parseInt(ex.sets),
-          })),
-        };
-
-        setWorkoutLogs((prev) => [newLog, ...prev]);
-      }
-    }, [params])
+      return () => unsubscribe();
+    }, [])
   );
 
   return (
@@ -52,7 +54,9 @@ export default function WorkoutLoggerScreen() {
 
       <TouchableOpacity
         style={styles.startButton}
-        onPress={() => router.push('/logger/screens/workout')}
+        onPress={() => {
+          router.push('/logger/screens/workout'); // Adjust path to your workout/timer screen
+        }}
       >
         <Text style={styles.startButtonText}>Start Workout</Text>
       </TouchableOpacity>
@@ -61,13 +65,12 @@ export default function WorkoutLoggerScreen() {
 
       <FlatList
         data={workoutLogs}
-        keyExtractor={(_, index) => index.toString()}
+        keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View style={styles.card}>
             <Text style={styles.dateText}>{item.date}</Text>
             <View style={styles.durationRow}>
-              <Ionicons name="time-outline" size={16} color="#333" />
-              <Text style={styles.durationText}>{item.duration} mins</Text>
+              <Text>{item.duration} mins</Text>
             </View>
             <View style={styles.headerRow}>
               <Text style={styles.columnTitle}>Exercise</Text>
@@ -81,6 +84,11 @@ export default function WorkoutLoggerScreen() {
             ))}
           </View>
         )}
+        ListEmptyComponent={
+          <Text style={{ textAlign: 'center', marginTop: 50 }}>
+            No workouts logged yet.
+          </Text>
+        }
       />
     </View>
   );
@@ -90,14 +98,32 @@ const styles = StyleSheet.create({
   container: { flex: 1, paddingTop: 90, padding: 25, backgroundColor: '#fff' },
   title: { fontSize: 35, fontWeight: 'bold' },
   subtitle: { color: '#666', marginBottom: 10 },
-  startButton: {backgroundColor: '#4a90e2',padding: 12,borderRadius: 10,alignItems: 'center',marginBottom: 20,},
+  startButton: {
+    backgroundColor: '#4a90e2',
+    padding: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginBottom: 20,
+  },
   startButtonText: { color: '#fff', fontWeight: '600' },
   loggerTitle: { fontSize: 35, fontWeight: 'bold', marginBottom: 10 },
-  card: {backgroundColor: '#f9f9f9',padding: 15,borderRadius: 10,marginBottom: 10,},
+  card: {
+    backgroundColor: '#f9f9f9',
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 10,
+  },
   dateText: { fontWeight: 'bold' },
   durationRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 5 },
-  durationText: { marginLeft: 5 },
-  headerRow: {flexDirection: 'row',justifyContent: 'space-between',marginTop: 10,},
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
   columnTitle: { fontWeight: 'bold' },
-  row: {flexDirection: 'row',justifyContent: 'space-between',paddingVertical: 3,},
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 3,
+  },
 });

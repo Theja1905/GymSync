@@ -1,6 +1,17 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+
+import { addDoc, collection } from 'firebase/firestore';
+import { db } from '../../../../firebase'; // <-- update path to your firebase config
 
 export default function WorkoutScreen() {
   const router = useRouter();
@@ -10,22 +21,13 @@ export default function WorkoutScreen() {
     { id: Date.now().toString(), name: '', reps: '', sets: '' },
   ]);
 
-  type Exercise = {
-    id: string;
-    name: string;
-    reps: string;
-    sets: string;
-  };
-
   const updateExercise = (
     id: string,
-    field: keyof Exercise,
+    field: 'name' | 'reps' | 'sets',
     value: string
   ) => {
     setExercises((prev) =>
-      prev.map((ex) =>
-        ex.id === id ? { ...ex, [field]: value } : ex
-      )
+      prev.map((ex) => (ex.id === id ? { ...ex, [field]: value } : ex))
     );
   };
 
@@ -36,32 +38,55 @@ export default function WorkoutScreen() {
     ]);
   };
 
-  const handleStartTimer = () => {
+  const handleStartTimer = async () => {
     if (!routineTitle.trim()) {
       Alert.alert('Please enter a workout routine title');
       return;
     }
-    const incomplete = exercises.some(
-      (ex) => !ex.name || !ex.reps || !ex.sets
-    );
-    if (incomplete) {
+
+    if (exercises.some((ex) => !ex.name || !ex.reps || !ex.sets)) {
       Alert.alert('Please complete all exercise fields');
       return;
     }
 
-    // Navigate to the timer screen
-    router.push('/logger/screens/timer');
+    const workoutData = {
+      routineTitle,
+      exercises: exercises.map((e) => ({
+        name: e.name,
+        reps: e.reps,
+        sets: e.sets,
+      })),
+      createdAt: new Date(),
+    };
+
+    try {
+      // Save workout routine + exercises to Firestore collection "workouts"
+      const docRef = await addDoc(collection(db, 'workouts'), workoutData);
+
+      // After saving, navigate to Timer screen
+      router.push({
+        pathname: '/logger/screens/timer',
+        params: {
+          routineTitle,
+          exercises: JSON.stringify(
+            workoutData.exercises.map(({ name, sets }) => ({ name, sets }))
+          ),
+          workoutId: docRef.id, // Optional: pass Firestore doc ID if needed
+        },
+      });
+    } catch (error) {
+      console.error('Error saving workout:', error);
+      Alert.alert('Error saving workout. Please try again.');
+    }
   };
 
   return (
-    <ScrollView style={styles.scrollView}
-      contentContainerStyle={styles.container}
-    >
+    <ScrollView style={styles.scrollView} contentContainerStyle={styles.container}>
       <Text style={styles.title}>Add Exercises</Text>
 
       <TextInput
         style={styles.routineInput}
-        placeholder="Workout Routine Title (e.g. Morning Workout)"
+        placeholder="Workout Routine Title"
         value={routineTitle}
         onChangeText={setRoutineTitle}
       />
@@ -79,30 +104,21 @@ export default function WorkoutScreen() {
               style={styles.inputExercise}
               placeholder="Type"
               value={exercise.name}
-              onChangeText={(text) =>
-                updateExercise(exercise.id, 'name', text)
-              }
-              placeholderTextColor="#999"
+              onChangeText={(text) => updateExercise(exercise.id, 'name', text)}
             />
             <TextInput
               style={styles.inputSmall}
               placeholder="Reps"
-              keyboardType="numeric"
               value={exercise.reps}
-              onChangeText={(text) =>
-                updateExercise(exercise.id, 'reps', text)
-              }
-              placeholderTextColor="#999"
+              keyboardType="numeric"
+              onChangeText={(text) => updateExercise(exercise.id, 'reps', text)}
             />
             <TextInput
               style={styles.inputSmall}
               placeholder="Sets"
-              keyboardType="numeric"
               value={exercise.sets}
-              onChangeText={(text) =>
-                updateExercise(exercise.id, 'sets', text)
-              }
-              placeholderTextColor="#999"
+              keyboardType="numeric"
+              onChangeText={(text) => updateExercise(exercise.id, 'sets', text)}
             />
           </View>
         ))}
@@ -116,10 +132,7 @@ export default function WorkoutScreen() {
         <Text style={styles.timerText}>Start Timer</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity
-        style={[styles.timerButton, styles.backButton]}
-        onPress={() => router.back()}
-      >
+      <TouchableOpacity style={[styles.timerButton, styles.backButton]} onPress={() => router.back()}>
         <Text style={styles.timerText}>Back to Logger</Text>
       </TouchableOpacity>
     </ScrollView>
@@ -127,23 +140,82 @@ export default function WorkoutScreen() {
 }
 
 const styles = StyleSheet.create({
-  scrollView: {flex: 1,backgroundColor: '#fff',},
-  container: {paddingTop: 80,paddingHorizontal: 24,backgroundColor: '#fff',paddingBottom: 40,alignItems: 'stretch',},
-  title: {fontSize: 32,fontWeight: '700',marginBottom: 20,color: '#111',fontFamily: 'System',},
-  routineInput: {borderWidth: 1,borderColor: '#ccc',paddingVertical: 14,paddingHorizontal: 16,borderRadius: 12,marginBottom: 24,fontSize: 16,fontFamily: 'System',backgroundColor: '#fafafa',},
-  card: {backgroundColor: '#fff',padding: 20,borderRadius: 16,borderWidth: 1,borderColor: '#ddd',marginBottom: 30,shadowColor: '#000',shadowOpacity: 0.05,shadowRadius: 10,shadowOffset: { width: 0, height: 4 },},
-  headerRow: {flexDirection: 'row',justifyContent: 'space-between',paddingBottom: 12,borderBottomWidth: 1,borderColor: '#eee', },
-  headerText: {fontWeight: '700',width: '30%',color: '#444',textAlign: 'center',fontSize: 15,},
-  inputRow: {flexDirection: 'row',alignItems: 'center',marginTop: 15,},
-  inputExercise: {flex: 2,borderWidth: 1,borderColor: '#ddd',borderRadius: 10,paddingVertical: 10,
-    paddingHorizontal: 14,marginRight: 12,fontSize: 15,backgroundColor: '#f5f5f5',fontFamily: 'System',},
-  inputSmall: {flex: 1, borderWidth: 1,borderColor: '#ddd',borderRadius: 10,paddingVertical: 10,
-    paddingHorizontal: 12,marginRight: 12,fontSize: 15,backgroundColor: '#f5f5f5',fontFamily: 'System',},
-  addButton: {marginTop: 20,alignSelf: 'flex-start',paddingVertical: 10,
-    paddingHorizontal: 18,backgroundColor: '#e0f0ff',
-    borderRadius: 12,},
-  addButtonText: {fontSize: 16,fontWeight: '600',color: '#007AFF',},
-  timerButton: {backgroundColor: '#191970',paddingVertical: 16,borderRadius: 14,alignItems: 'center',marginBottom: 12,},
-  backButton: {backgroundColor: '#555',shadowColor: '#000',shadowOpacity: 0.2,shadowRadius: 6,shadowOffset: { width: 0, height: 3 },},
-  timerText: {color: '#fff',fontWeight: '700',fontSize: 17,fontFamily: 'System',},
+  scrollView: { flex: 1, backgroundColor: '#fff' },
+  container: {
+    paddingTop: 80,
+    paddingHorizontal: 24,
+    paddingBottom: 40,
+    alignItems: 'stretch',
+    backgroundColor: '#fff',
+  },
+  title: { fontSize: 32, fontWeight: '700', marginBottom: 20 },
+  routineInput: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    marginBottom: 24,
+    fontSize: 16,
+    backgroundColor: '#fafafa',
+  },
+  card: {
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    marginBottom: 30,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderColor: '#eee',
+  },
+  headerText: { fontWeight: '700', width: '30%', textAlign: 'center' },
+  inputRow: { flexDirection: 'row', alignItems: 'center', marginTop: 15 },
+  inputExercise: {
+    flex: 2,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    marginRight: 12,
+    fontSize: 15,
+    backgroundColor: '#f5f5f5',
+  },
+  inputSmall: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    marginRight: 12,
+    fontSize: 15,
+    backgroundColor: '#f5f5f5',
+  },
+  addButton: {
+    marginTop: 20,
+    alignSelf: 'flex-start',
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    backgroundColor: '#e0f0ff',
+    borderRadius: 12,
+  },
+  addButtonText: { fontSize: 16, fontWeight: '600', color: '#007AFF' },
+  timerButton: {
+    backgroundColor: '#191970',
+    paddingVertical: 16,
+    borderRadius: 14,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  backButton: {
+    backgroundColor: '#555',
+  },
+  timerText: { color: '#fff', fontWeight: '700', fontSize: 17 },
 });
