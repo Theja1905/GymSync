@@ -109,9 +109,9 @@ export default function TemplatesScreen() {
 const styles = StyleSheet.create({
   safeArea: {flex: 1,backgroundColor: '#fff',},
   container: {padding: 20,},
-  pageTitle: {fontSize: 40,fontWeight: 'bold',marginBottom: 16,},
+  pageTitle: {fontSize: 32,fontWeight: 'bold',marginBottom: 16,},
   templateButton: {backgroundColor: '#4a90e2',paddingVertical: 12, paddingHorizontal: 16,
-    borderRadius: 12,alignItems: 'center',marginBottom: 24,},
+    borderRadius: 12,alignItems: 'center',marginBottom: 20,},
   templateButtonText: {color: '#fff',fontSize: 16,fontWeight: '600',},
   sectionHeader: {fontWeight: 'bold',fontSize: 18,marginBottom: 8,},
   card: {backgroundColor: '#f2f2f2',padding: 12,borderRadius: 8,marginBottom: 12,},

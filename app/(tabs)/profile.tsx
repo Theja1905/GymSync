@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   header: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: '700',
     marginBottom: 5,
     textAlign: 'left',
@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
     marginTop: 30,
     backgroundColor: '#4a90e2',
     paddingVertical: 11,
-    width: 260,
+    width: 280,
     borderRadius: 15,
     alignItems: 'center',
     borderWidth: 1,
