@@ -109,7 +109,7 @@ export default function TemplatesScreen() {
 const styles = StyleSheet.create({
   safeArea: {flex: 1,backgroundColor: '#fff',},
   container: {padding: 20,},
-  pageTitle: {fontSize: 32,fontWeight: 'bold',marginBottom: 16,},
+  pageTitle: {fontSize: 40,fontWeight: 'bold',marginBottom: 16,},
   templateButton: {backgroundColor: '#4a90e2',paddingVertical: 12, paddingHorizontal: 16,
     borderRadius: 12,alignItems: 'center',marginBottom: 24,},
   templateButtonText: {color: '#fff',fontSize: 16,fontWeight: '600',},

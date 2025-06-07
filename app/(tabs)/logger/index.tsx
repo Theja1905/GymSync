@@ -95,7 +95,7 @@ export default function WorkoutLoggerScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingTop: 90, padding: 25, backgroundColor: '#fff' },
+  container: { flex: 1, paddingTop: 60, padding: 25, backgroundColor: '#fff' },
   title: { fontSize: 35, fontWeight: 'bold' },
   subtitle: { color: '#666', marginBottom: 10 },
   startButton: {
@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
   },
-  startButtonText: { color: '#fff', fontWeight: '600' },
+  startButtonText: { color: '#fff', fontWeight: '600', fontSize: 18},
   loggerTitle: { fontSize: 35, fontWeight: 'bold', marginBottom: 10 },
   card: {
     backgroundColor: '#f9f9f9',
