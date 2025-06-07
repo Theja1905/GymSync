@@ -8,7 +8,9 @@ export default function TabsLayout() {
       screenOptions={({ route }) => {
         let iconName: React.ComponentProps<typeof Ionicons>['name'];
 
-        if (route.name === 'logger') {
+        if (route.name === 'templates/index') {
+          iconName = 'list-outline'; // icon for templates
+        } else if (route.name === 'logger') {
           iconName = 'barbell-outline';
         } else if (route.name === 'profile') {
           iconName = 'person-outline';
@@ -17,9 +19,9 @@ export default function TabsLayout() {
         }
 
         return {
-          headerShown: false, // hide top header to remove (tabs) title
-          headerBackVisible: false, // remove the "<" back arrow
-          gestureEnabled: false,    // disable iOS swipe-back
+          headerShown: false,
+          headerBackVisible: false,
+          gestureEnabled: false,
           tabBarActiveTintColor: '#4a90e2',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name={iconName} size={size} color={color} />
@@ -28,14 +30,17 @@ export default function TabsLayout() {
       }}
     >
       <Tabs.Screen
+        name="templates/index"
+        options={{ title: 'Templates', headerShown: false }}
+      />
+      <Tabs.Screen
         name="logger"
-        options={{ title: 'Workout Logger' , headerShown: false,}}
+        options={{ title: 'Workout Logger', headerShown: false }}
       />
       <Tabs.Screen
         name="profile"
-        options={{ title: 'Profile', headerShown: false,}}
+        options={{ title: 'Profile', headerShown: false }}
       />
     </Tabs>
   );
 }
-

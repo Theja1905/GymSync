@@ -18,12 +18,12 @@ export default function Index() {
           style={styles.image}
         />
         <Text style={styles.title}>Welcome to GymSync</Text>
-        <Text style={styles.subtitle}>where goals meet growth</Text>
+        <Text style={styles.subtitle}>where GOALS meet GROWTH</Text>
 
         {/* LOG IN Button */}
         <TouchableOpacity
           style={[styles.button, styles.loginButton]}
-          onPress={() => router.push('/login')}
+          onPress={() => router.replace('/login')}
         >
           <Text style={styles.buttonText}>LOG IN</Text>
         </TouchableOpacity>
@@ -31,7 +31,7 @@ export default function Index() {
         {/* SIGN UP Button */}
         <TouchableOpacity
           style={[styles.button, styles.signupButton]}
-          onPress={() => router.push('/signup')}
+          onPress={() => router.replace('/signup')}
         >
           <Text style={styles.buttonText}>SIGN UP</Text>
         </TouchableOpacity>
