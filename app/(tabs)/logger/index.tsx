@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
   subtitle: { color: '#666', marginBottom: 10 },
   startButton: {
     backgroundColor: '#4a90e2',
-    paddingVertical: 7,
+    paddingVertical: 9,
     paddingHorizontal: 10,
     borderRadius: 20,
     alignItems: 'center',
