@@ -139,12 +139,16 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 10,
     paddingHorizontal: 20,
+    width: 68,
     marginBottom: 12,
+    textAlign: 'center', 
   },
   exerciseRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 20,
+    justifyContent: 'space-between',
+    width: '100%',
   },
   exerciseColumn: {
     flexDirection: 'column',

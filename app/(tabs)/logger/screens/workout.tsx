@@ -67,7 +67,7 @@ export default function WorkoutScreen() {
         params: {
           routineTitle,
           exercises: JSON.stringify(
-            workoutData.exercises.map(({ name, sets }) => ({ name, sets }))
+            workoutData.exercises.map(({ name, sets, reps }) => ({ name, sets, reps }))
           ),
           workoutId: docRef.id,
         },

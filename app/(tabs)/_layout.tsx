@@ -8,7 +8,7 @@ export default function TabsLayout() {
       screenOptions={({ route }) => {
         let iconName: React.ComponentProps<typeof Ionicons>['name'];
 
-        if (route.name === 'templates/index') {
+        if (route.name === 'templates') {
           iconName = 'list-outline'; // icon for templates
         } else if (route.name === 'logger') {
           iconName = 'barbell-outline';
@@ -30,7 +30,7 @@ export default function TabsLayout() {
       }}
     >
       <Tabs.Screen
-        name="templates/index"
+        name="templates"
         options={{ title: 'Templates', headerShown: false }}
       />
       <Tabs.Screen

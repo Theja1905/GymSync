@@ -12,6 +12,7 @@ type WorkoutLog = {
   exercises: {
     name: string;
     sets: number;
+    reps: number;
   }[];
 };
 
@@ -73,13 +74,16 @@ export default function WorkoutLoggerScreen() {
               <Text>{item.duration} mins</Text>
             </View>
             <View style={styles.headerRow}>
-              <Text style={styles.columnTitle}>Exercise</Text>
-              <Text style={styles.columnTitle}>No. of Sets</Text>
+              <View style={styles.columnWide}><Text style={styles.columnTitle}>Exercise</Text></View>
+              <View style={styles.column}><Text style={styles.columnTitle}>Sets</Text></View>
+              <View style={styles.column}><Text style={styles.columnTitle}>Reps</Text></View>
             </View>
+
             {item.exercises.map((ex, i) => (
               <View key={i} style={styles.row}>
-                <Text>{ex.name}</Text>
-                <Text>{ex.sets}</Text>
+                <View style={styles.columnWide}><Text>{ex.name}</Text></View>
+                <View style={styles.column}><Text>{ex.sets}</Text></View>
+                <View style={styles.column}><Text>{ex.reps}</Text></View>
               </View>
             ))}
           </View>
@@ -118,13 +122,17 @@ const styles = StyleSheet.create({
   durationRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 5 },
   headerRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     marginTop: 10,
   },
   columnTitle: { fontWeight: 'bold' },
   row: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     paddingVertical: 3,
   },
+  column: {
+  flex: 1, // Equally divide space for 3 columns
+},
+columnWide: {
+  flex: 2, // Wider column for exercise name
+},
 });
