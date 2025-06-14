@@ -1,16 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import {
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import React, { useEffect, useState } from 'react';
+import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { db, auth } from '../../firebase';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { auth, db } from '../../firebase';
 
 const fitnessLevels = ['Beginner', 'Intermediate', 'Advanced'] as const;
 const workoutFocusOptions = ['Strength', 'Cardio', 'Flexibility'] as const;
@@ -29,6 +21,7 @@ export default function UserProfile() {
   const [goal, setGoal] = useState<FitnessGoal>(fitnessGoals[0]);
   const [workoutFrequency, setWorkoutFrequency] = useState<string>('');
 
+  //for multi-select UI
   const toggleFocus = (focus: WorkoutFocus) => {
     setWorkoutFocus((prev) =>
       prev.includes(focus)
@@ -60,7 +53,6 @@ export default function UserProfile() {
         console.error('Error fetching profile:', error);
       }
     };
-
     fetchProfile();
   }, []);
 
@@ -72,13 +64,7 @@ export default function UserProfile() {
     }
 
     const profileData = {
-      age,
-      weight,
-      height,
-      fitnessLevel,
-      workoutFocus,
-      goal,
-      workoutFrequency,
+      age,weight,height,fitnessLevel,workoutFocus,goal,workoutFrequency,
       updatedAt: new Date().toISOString(),
     };
 
@@ -95,7 +81,6 @@ export default function UserProfile() {
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.header}>Profile</Text>
-
         <Text style={styles.label}>Age</Text>
         <TextInput
           style={styles.input}
@@ -132,14 +117,12 @@ export default function UserProfile() {
                 styles.pickerOption,
                 fitnessLevel === level && styles.pickerOptionSelected,
               ]}
-              onPress={() => setFitnessLevel(level)}
-            >
+              onPress={() => setFitnessLevel(level)}>
               <Text
                 style={[
                   styles.pickerOptionText,
                   fitnessLevel === level && styles.pickerOptionTextSelected,
-                ]}
-              >
+                ]}>
                 {level}
               </Text>
             </TouchableOpacity>
@@ -210,70 +193,15 @@ export default function UserProfile() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 20,
-    paddingBottom: 40,
-    backgroundColor: '#fff',
-  },
-  header: {
-    fontSize: 32,
-    fontWeight: '700',
-    marginBottom: 5,
-    textAlign: 'left',
-  },
-  label: {
-    fontSize: 16,
-    marginTop: 15,
-    marginBottom: 8,
-    fontWeight: '600',
-    color: '#333',
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    borderRadius: 8,
-    fontSize: 16,
-  },
-  pickerContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  pickerOption: {
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#aaa',
-    marginRight: 10,
-    marginBottom: 10,
-  },
-  pickerOptionSelected: {
-    backgroundColor: '#4a90e2',
-    borderColor: '#4a90e2',
-  },
-  pickerOptionText: {
-    color: '#555',
-    fontWeight: '600',
-  },
-  pickerOptionTextSelected: {
-    color: '#fff',
-  },
-  saveButton: {
-    marginTop: 30,
-    backgroundColor: '#4a90e2',
-    paddingVertical: 11,
-    width: 280,
-    borderRadius: 15,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    alignSelf: 'center'
-  },
-  saveButtonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#f9f9f9',
-  },
+  container: {padding: 20,paddingBottom: 40,backgroundColor: '#fff',},
+  header: {fontSize: 32,fontWeight: '700',marginBottom: 5,textAlign: 'left',},
+  label: {fontSize: 16,marginTop: 15,marginBottom: 8,fontWeight: '600',color: '#333',},
+  input: {borderWidth: 1,borderColor: '#ccc',paddingHorizontal: 15,paddingVertical: 10,borderRadius: 8,fontSize: 16,},
+  pickerContainer: {flexDirection: 'row',flexWrap: 'wrap',},
+  pickerOption: {paddingHorizontal: 15,paddingVertical: 8,borderRadius: 20,borderWidth: 1,borderColor: '#aaa',marginRight: 10,marginBottom: 10,},
+  pickerOptionSelected: {backgroundColor: '#4a90e2',borderColor: '#4a90e2',},
+  pickerOptionText: {color: '#555',fontWeight: '600',},
+  pickerOptionTextSelected: {color: '#fff',},
+  saveButton: {marginTop: 30,backgroundColor: '#4a90e2',paddingVertical: 11,width: 280,borderRadius: 15,alignItems: 'center',borderWidth: 1,borderColor: '#ddd',alignSelf: 'center'},
+  saveButtonText: {fontSize: 16,fontWeight: 'bold',color: '#f9f9f9',},
 });

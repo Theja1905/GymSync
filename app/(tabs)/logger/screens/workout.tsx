@@ -1,21 +1,11 @@
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import {
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-
 import { addDoc, collection } from 'firebase/firestore';
-import { db } from '../../../../firebase'; // <-- update path to your firebase config
+import React, { useState } from 'react';
+import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { db } from '../../../../firebase';
 
 export default function WorkoutScreen() {
   const router = useRouter();
-
   const [routineTitle, setRoutineTitle] = useState('');
   const [exercises, setExercises] = useState([
     { id: Date.now().toString(), name: '', reps: '', sets: '' },
@@ -128,7 +118,6 @@ export default function WorkoutScreen() {
         </View>
       </ScrollView>
 
-      {/* Fixed Footer Buttons */}
       <View style={styles.footer}>
         <TouchableOpacity style={styles.timerButton} onPress={handleStartTimer}>
           <Text style={styles.timerText}>Start Timer</Text>
@@ -146,116 +135,21 @@ export default function WorkoutScreen() {
 }
 
 const styles = StyleSheet.create({
-  page: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  scrollView: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  container: {
-    paddingTop: 80,
-    paddingHorizontal: 24,
-    paddingBottom: 40, // leave space above fixed buttons
-    alignItems: 'stretch',
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '700',
-    marginBottom: 20,
-  },
-  routineInput: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 30,
-    marginBottom: 24,
-    fontSize: 16,
-    backgroundColor: '#fafafa',
-  },
-  card: {
-    backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    marginBottom: 30,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderColor: '#eee',
-  },
-  headerText: {
-    fontWeight: '500',
-    width: '30%',
-    fontSize: 18,
-    textAlign: 'center',
-  },
-  inputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 15,
-  },
-  inputExercise: {
-    flex: 2,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 30,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    marginRight: 12,
-    fontSize: 15,
-    backgroundColor: '#f5f5f5',
-  },
-  inputSmall: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 30,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    marginRight: 12,
-    fontSize: 15,
-    backgroundColor: '#f5f5f5',
-  },
-  addButton: {
-    marginTop: 20,
-    alignSelf: 'flex-start',
-    paddingVertical: 10,
-    paddingHorizontal: 100,
-    backgroundColor: '#e0f0ff',
-    borderRadius: 30,
-  },
-  addButtonText: {
-    fontSize: 16,
-    fontWeight: '400',
-    color: '#007AFF',
-  },
-  footer: {
-    paddingHorizontal: 24,
-    paddingBottom: 20,
-    paddingTop: 10,
-    backgroundColor: '#fff',
-
-  },
-  timerButton: {
-    backgroundColor: '#4a90e2',
-    paddingVertical: 10,
-    borderRadius: 20,
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  backButton: {
-    backgroundColor: '#BBBBBB',
-  },
-  timerText: {
-    color: '#fff',
-    fontWeight: '400',
-    fontSize: 17,
-  },
+  page: {flex: 1,backgroundColor: '#fff'},
+  scrollView: {flex: 1,backgroundColor: '#fff',},
+  container: {paddingTop: 80,paddingHorizontal: 24,paddingBottom: 40,alignItems: 'stretch',},
+  title: {fontSize: 32,fontWeight: '700',marginBottom: 20,},
+  routineInput: {borderWidth: 1,borderColor: '#ccc',paddingVertical: 14,paddingHorizontal: 16,borderRadius: 30,marginBottom: 24,fontSize: 16,backgroundColor: '#fafafa',},
+  card: {backgroundColor: '#fff',padding: 20,borderRadius: 16,borderWidth: 1,borderColor: '#ddd',marginBottom: 30,},
+  headerRow: {flexDirection: 'row',justifyContent: 'space-between',paddingBottom: 12,borderBottomWidth: 1,borderColor: '#eee',},
+  headerText: { fontWeight: '500',width: '30%',fontSize: 18,textAlign: 'center',},
+  inputRow: {flexDirection: 'row',alignItems: 'center',marginTop: 15,},
+  inputExercise: {flex: 2,borderWidth: 1,borderColor: '#ddd',borderRadius: 30,paddingVertical: 10,paddingHorizontal: 14,marginRight: 12,fontSize: 15,backgroundColor: '#f5f5f5',},
+  inputSmall: {flex: 1,borderWidth: 1,borderColor: '#ddd',borderRadius: 30,paddingVertical: 10,paddingHorizontal: 12,marginRight: 12,fontSize: 15,backgroundColor: '#f5f5f5',},
+  addButton: {marginTop: 20,alignSelf: 'flex-start',paddingVertical: 10,paddingHorizontal: 100,backgroundColor: '#e0f0ff',borderRadius: 30,},
+  addButtonText: {fontSize: 16,fontWeight: '400',color: '#007AFF',},
+  footer: {paddingHorizontal: 24,paddingBottom: 20,paddingTop: 10,backgroundColor: '#fff',},
+  timerButton: {backgroundColor: '#4a90e2',paddingVertical: 10,borderRadius: 20,alignItems: 'center',marginBottom: 12,},
+  backButton: {backgroundColor: '#BBBBBB',},
+  timerText: {color: '#fff',fontWeight: '400',fontSize: 17,},
 });

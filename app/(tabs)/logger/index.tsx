@@ -102,37 +102,15 @@ const styles = StyleSheet.create({
   container: { flex: 1, padding: 20, backgroundColor: '#fff' },
   title: { fontSize: 35, fontWeight: 'bold' },
   subtitle: { color: '#666', marginBottom: 10 },
-  startButton: {
-    backgroundColor: '#4a90e2',
-    paddingVertical: 9,
-    paddingHorizontal: 10,
-    borderRadius: 20,
-    alignItems: 'center',
-    marginBottom: 20,
-  },
+  startButton: {backgroundColor: '#4a90e2',paddingVertical: 9,paddingHorizontal: 10,borderRadius: 20,alignItems: 'center',marginBottom: 20},
   startButtonText: { color: '#fff', fontWeight: '600', fontSize: 16 },
   loggerTitle: { fontSize: 35, fontWeight: 'bold', marginBottom: 10 },
-  card: {
-    backgroundColor: '#f9f9f9',
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 10,
-  },
+  card: {backgroundColor: '#f9f9f9',padding: 15,borderRadius: 10,marginBottom: 10,},
   dateText: { fontWeight: 'bold' },
   durationRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 5 },
-  headerRow: {
-    flexDirection: 'row',
-    marginTop: 10,
-  },
+  headerRow: {flexDirection: 'row',marginTop: 10},
   columnTitle: { fontWeight: 'bold' },
-  row: {
-    flexDirection: 'row',
-    paddingVertical: 3,
-  },
-  column: {
-  flex: 1, // Equally divide space for 3 columns
-},
-columnWide: {
-  flex: 2, // Wider column for exercise name
-},
+  row: {flexDirection: 'row',paddingVertical: 3,},
+  column: {flex: 1,},
+  columnWide: {flex: 2,},
 });

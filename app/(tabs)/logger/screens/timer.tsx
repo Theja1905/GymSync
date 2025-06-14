@@ -7,9 +7,7 @@ import { auth, db } from '../../../../firebase'; // Adjust this path if needed
 export default function TimerScreen() {
   const router = useRouter();
   const { routineTitle, exercises } = useLocalSearchParams();
-
   const parsedExercises = exercises ? JSON.parse(exercises as string) : [];
-
   const [seconds, setSeconds] = useState(0);
   const [isRunning, setIsRunning] = useState(true);
 
@@ -35,21 +33,17 @@ export default function TimerScreen() {
     setIsRunning(false);
 
     try {
-      // Save workout to Firestore with userId and formatted date
       await addDoc(collection(db, 'workouts'), {
         routineTitle,
         exercises: parsedExercises,
         duration: formatTime(),
         createdAt: Timestamp.now(),
         userId: auth.currentUser?.uid,
-        date: new Date().toLocaleDateString(), // Optional: format this as needed
+        date: new Date().toLocaleDateString(),
       });
-
-      // Navigate back to the logger screen
       router.push('/logger');
     } catch (error) {
       console.error('Error saving workout: ', error);
-      // Optionally display error to user
     }
   };
 
@@ -57,7 +51,6 @@ export default function TimerScreen() {
     <View style={styles.container}>
       <Text style={styles.title}>Workout Timer</Text>
       <Text style={styles.timer}>{formatTime()}</Text>
-
       <TouchableOpacity style={styles.finishButton} onPress={handleFinishWorkout}>
         <Text style={styles.finishText}>Finish Workout</Text>
       </TouchableOpacity>
@@ -69,11 +62,6 @@ const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' },
   title: { fontSize: 50, fontWeight: 'bold', marginBottom: 40 },
   timer: { fontSize: 48, fontWeight: 'bold', marginBottom: 40 },
-  finishButton: {
-    backgroundColor: '#4caf50',
-    paddingVertical: 10,
-    paddingHorizontal: 70,
-    borderRadius: 30,
-  },
+  finishButton: {backgroundColor: '#4caf50',paddingVertical: 10,paddingHorizontal: 70,borderRadius: 30,},
   finishText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
 });

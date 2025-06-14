@@ -1,14 +1,6 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import {
-  Pressable,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 export default function CreateTemplateScreen() {
   const router = useRouter();
@@ -115,73 +107,16 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#fff' },
   container: { padding: 20 },
   title: { fontSize: 28, fontWeight: 'bold', marginBottom: 20 },
-  inputTemplateName: {
-    borderColor: '#ccc',
-    borderWidth: 1,
-    borderRadius: 8, 
-    padding: 10,
-    width: 350,
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  inputExerciseName: {
-    borderColor: '#ccc',
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 10,
-    width: 190, 
-    marginBottom: 12,
-    textAlign: 'center', 
-  },
-  inputSetsReps: {
-    borderColor: '#ccc',
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 10,
-    paddingHorizontal: 20,
-    width: 68,
-    marginBottom: 12,
-    textAlign: 'center', 
-  },
-  exerciseRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-    justifyContent: 'space-between',
-    width: '100%',
-  },
-  exerciseColumn: {
-    flexDirection: 'column',
-    marginRight: 12,
-  },
-  label: {
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  addButton: {
-    backgroundColor: '#ddd',
-    padding: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginBottom: 20,
-  },
+  inputTemplateName: {borderColor: '#ccc',borderWidth: 1,borderRadius: 8, padding: 10,width: 350,marginBottom: 12,textAlign: 'center',},
+  inputExerciseName: {borderColor: '#ccc',borderWidth: 1,borderRadius: 8,padding: 10,width: 190,marginBottom: 12,textAlign: 'center',},
+  inputSetsReps: {borderColor: '#ccc',borderWidth: 1,borderRadius: 8,padding: 10,paddingHorizontal: 20,width: 68,marginBottom: 12,textAlign: 'center',},
+  exerciseRow: {flexDirection: 'row',alignItems: 'center',marginBottom: 20,justifyContent: 'space-between',width: '100%',},
+  exerciseColumn: {flexDirection: 'column',marginRight: 12,},
+  label: {fontWeight: 'bold',marginBottom: 4,},
+  addButton: {backgroundColor: '#ddd',padding: 12,borderRadius: 8,alignItems: 'center',marginBottom: 20,},
   addButtonText: { fontWeight: 'bold' },
-  saveButton: {
-    backgroundColor: '#4a90e2',
-    padding: 15,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
+  saveButton: {backgroundColor: '#4a90e2',padding: 15,borderRadius: 12,alignItems: 'center'},
   saveButtonText: { color: '#fff', fontWeight: '600' },
-  backButton: {
-    backgroundColor: '#aaa',
-    padding: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 12,
-  },
-  backButtonText: {
-    color: '#fff',
-    fontWeight: '600',
-  },
+  backButton: {backgroundColor: '#aaa',padding: 12,borderRadius: 8,alignItems: 'center',marginTop: 12,},
+  backButtonText: {color: '#fff',fontWeight: '600'},
 });

@@ -1,31 +1,20 @@
 import { useNavigation } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
-import {
-  Alert,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import { auth } from '../firebase'; // Adjust the path if needed
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../firebase'; // adjust if needed
-
+import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { auth, db } from '../firebase';
 
 const SignupScreen = () => {
   const router = useRouter();
   const navigation = useNavigation();
-
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // 👇 This hides the back arrow
   useEffect(() => {
     navigation.setOptions({ headerLeft: () => null });
   }, [navigation]);
@@ -35,7 +24,6 @@ const SignupScreen = () => {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
-
     if (password !== confirmPassword) {
       Alert.alert('Error', 'Passwords do not match');
       return;
@@ -43,11 +31,8 @@ const SignupScreen = () => {
 
     setLoading(true);
     try {
-      // Create user in Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-
-      // Create user document in Firestore
       await setDoc(doc(db, 'users', user.uid), {
         fullName: fullName,
         email: email,
@@ -134,56 +119,14 @@ const SignupScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 20,
-    backgroundColor: '#fff',
-  },
-  inputGroup: {
-    marginBottom: 16,
-  },
-  label: {
-    fontSize: 16,
-    marginBottom: 4,
-    fontWeight: '500',
-    color: '#333',
-  },
-  input: {
-    height: 50,
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    borderColor: '#ccc',
-    backgroundColor: '#fff',
-    fontSize: 16,
-  },
-  button: {
-    backgroundColor: '#4b0082',
-    paddingVertical: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 17,
-    fontWeight: 'bold',
-  },
-  loginRedirect: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 20,
-  },
-  loginText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  loginLink: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#4b0082',
-  },
+  container: {flex: 1,justifyContent: 'center',paddingHorizontal: 20,backgroundColor: '#fff',},
+  inputGroup: {marginBottom: 16,},
+  label: {fontSize: 16,marginBottom: 4,fontWeight: '500',color: '#333',},
+  input: {height: 50,borderWidth: 1,borderRadius: 8,paddingHorizontal: 10,borderColor: '#ccc',backgroundColor: '#fff',fontSize: 16,},
+  button: {backgroundColor: '#4b0082',paddingVertical: 15,borderRadius: 8,alignItems: 'center',marginTop: 10,},
+  buttonText: {color: '#fff',fontSize: 17,fontWeight: 'bold',},
+  loginRedirect: {flexDirection: 'row',justifyContent: 'center',marginTop: 20,},
+  loginText: {fontSize: 16,color: '#333',},
+  loginLink: {fontSize: 16,fontWeight: 'bold',color: '#4b0082',},
 });
-
 export default SignupScreen;
