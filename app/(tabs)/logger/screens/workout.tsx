@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
   routineInput: {borderWidth: 1,borderColor: '#ccc',paddingVertical: 14,paddingHorizontal: 16,borderRadius: 30,marginBottom: 24,fontSize: 16,backgroundColor: '#fafafa',},
   card: {backgroundColor: '#fff',padding: 20,borderRadius: 16,borderWidth: 1,borderColor: '#ddd',marginBottom: 30,},
   headerRow: {flexDirection: 'row',justifyContent: 'space-between',paddingBottom: 12,borderBottomWidth: 1,borderColor: '#eee',},
-  headerText: { fontWeight: '500',width: '30%',fontSize: 18,textAlign: 'center',},
+  headerText: { fontWeight: '600',width: '30%',fontSize: 18,textAlign: 'center',},
   inputRow: {flexDirection: 'row',alignItems: 'center',marginTop: 15,},
   inputExercise: {flex: 2,borderWidth: 1,borderColor: '#ddd',borderRadius: 30,paddingVertical: 10,paddingHorizontal: 14,marginRight: 12,fontSize: 15,backgroundColor: '#f5f5f5',},
   inputSmall: {flex: 1,borderWidth: 1,borderColor: '#ddd',borderRadius: 30,paddingVertical: 10,paddingHorizontal: 12,marginRight: 12,fontSize: 15,backgroundColor: '#f5f5f5',},
@@ -151,5 +151,5 @@ const styles = StyleSheet.create({
   footer: {paddingHorizontal: 24,paddingBottom: 20,paddingTop: 10,backgroundColor: '#fff',},
   timerButton: {backgroundColor: '#4a90e2',paddingVertical: 10,borderRadius: 20,alignItems: 'center',marginBottom: 12,},
   backButton: {backgroundColor: '#BBBBBB',},
-  timerText: {color: '#fff',fontWeight: '400',fontSize: 17,},
+  timerText: {color: '#fff',fontWeight: '600',fontSize: 17, },
 });

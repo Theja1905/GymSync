@@ -1,9 +1,9 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import React, { useState } from 'react';
 import { Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { db } from '../../../firebase';
+import { db, auth } from '../../../firebase';  
 
 type Template = {
   id: string;
@@ -11,6 +11,7 @@ type Template = {
   exercises: string[];
   sets?: number[];
   reps?: number[];
+  uid?: string;
 };
 
 const exampleTemplates: Template[] = [
@@ -65,7 +66,14 @@ export default function TemplatesScreen() {
   useFocusEffect(
     React.useCallback(() => {
       const fetchTemplates = async () => {
-        const snapshot = await getDocs(collection(db, 'templates'));
+        const uid = auth.currentUser?.uid;
+        if (!uid) return;
+
+        const templatesRef = collection(db, 'templates');
+        // Query only templates where uid equals current user uid
+        const q = query(templatesRef, where('uid', '==', uid));
+        const snapshot = await getDocs(q);
+
         const templates = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data(),
