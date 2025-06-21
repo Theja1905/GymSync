@@ -1,18 +1,20 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { collection, addDoc } from 'firebase/firestore';
+import { db } from '../../../firebase';
 
 export default function CreateTemplateScreen() {
   const router = useRouter();
   const [templateName, setTemplateName] = useState('');
   const [exercises, setExercises] = useState<string[]>(['']);
-  const [sets, setSets] = useState<number[]>([]); // Empty sets array
-  const [reps, setReps] = useState<number[]>([]); // Empty reps array
+  const [sets, setSets] = useState<number[]>([0]);
+  const [reps, setReps] = useState<number[]>([0]);
 
   const addExercise = () => {
     setExercises([...exercises, '']);
-    setSets([...sets, 0]); // Don't add a default value, just an empty entry
-    setReps([...reps, 0]); // Don't add a default value, just an empty entry
+    setSets([...sets, 0]);
+    setReps([...reps, 0]);
   };
 
   const updateExercise = (index: number, value: string) => {
@@ -23,18 +25,28 @@ export default function CreateTemplateScreen() {
 
   const updateSet = (index: number, value: string) => {
     const updated = [...sets];
-    updated[index] = parseInt(value) || 0; // Update to 0 if the input is invalid
+    updated[index] = parseInt(value) || 0;
     setSets(updated);
   };
 
   const updateRep = (index: number, value: string) => {
     const updated = [...reps];
-    updated[index] = parseInt(value) || 0; // Update to 0 if the input is invalid
+    updated[index] = parseInt(value) || 0;
     setReps(updated);
   };
 
-  const saveTemplate = () => {
-    console.log({ templateName, exercises, sets, reps });
+  const saveTemplate = async () => {
+    const validExercises = exercises.filter(e => e.trim() !== '');
+    if (!templateName || validExercises.length === 0) return;
+
+    const templatesRef = collection(db, 'templates');
+    await addDoc(templatesRef, {
+      name: templateName,
+      exercises: validExercises,
+      sets,
+      reps,
+    });
+
     router.back();
   };
 
@@ -45,7 +57,7 @@ export default function CreateTemplateScreen() {
 
         <Text style={styles.label}>Template Name:</Text>
         <TextInput
-          style={styles.inputTemplateName} // Template name input style
+          style={styles.inputTemplateName}
           placeholder="Enter template name"
           value={templateName}
           onChangeText={setTemplateName}
@@ -54,10 +66,10 @@ export default function CreateTemplateScreen() {
         {exercises.map((exercise, index) => (
           <View key={index} style={styles.exerciseRow}>
             <View style={styles.exerciseColumn}>
-              <Text style={styles.label}>Name:</Text>
+              <Text style={styles.label}>Exercise:</Text>
               <TextInput
-                style={styles.inputExerciseName} // Exercise name input style
-                placeholder="Exercise Name" // Changed to just "Exercise Name"
+                style={styles.inputExerciseName}
+                placeholder="Exercise Name"
                 value={exercise}
                 onChangeText={(text) => updateExercise(index, text)}
               />
@@ -66,10 +78,10 @@ export default function CreateTemplateScreen() {
             <View style={styles.exerciseColumn}>
               <Text style={styles.label}>Sets:</Text>
               <TextInput
-                style={styles.inputSetsReps} // Sets input style
+                style={styles.inputSetsReps}
                 placeholder="Sets"
                 keyboardType="numeric"
-                value={sets[index] ? sets[index].toString() : ''} // Handle empty sets
+                value={sets[index]?.toString() || ''}
                 onChangeText={(text) => updateSet(index, text)}
               />
             </View>
@@ -77,10 +89,10 @@ export default function CreateTemplateScreen() {
             <View style={styles.exerciseColumn}>
               <Text style={styles.label}>Reps:</Text>
               <TextInput
-                style={styles.inputSetsReps} // Reps input style
+                style={styles.inputSetsReps}
                 placeholder="Reps"
                 keyboardType="numeric"
-                value={reps[index] ? reps[index].toString() : ''} // Handle empty reps
+                value={reps[index]?.toString() || ''}
                 onChangeText={(text) => updateRep(index, text)}
               />
             </View>

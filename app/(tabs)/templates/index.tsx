@@ -1,6 +1,9 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../../../firebase';
+import { useFocusEffect } from '@react-navigation/native';
 
 type Template = {
   id: string;
@@ -9,16 +12,6 @@ type Template = {
   sets?: number[];
   reps?: number[];
 };
-
-const myTemplates: Template[] = [
-  {
-    id: '1',
-    name: 'Night Workout',
-    exercises: ['Bench Press', 'Squat', 'Leg Extension', 'Deadlift'],
-    sets: [4, 5, 3, 4],
-    reps: [10, 8, 12, 6],
-  },
-];
 
 const exampleTemplates: Template[] = [
   {
@@ -62,11 +55,28 @@ export default function TemplatesScreen() {
   const router = useRouter();
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [myTemplates, setMyTemplates] = useState<Template[]>([]);
 
   const openTemplate = (template: Template) => {
     setSelectedTemplate(template);
     setModalVisible(true);
   };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const fetchTemplates = async () => {
+        const snapshot = await getDocs(collection(db, 'templates'));
+        const templates = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as Template[];
+
+        setMyTemplates(templates);
+      };
+
+      fetchTemplates();
+    }, [])
+  );
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -158,19 +168,58 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#fff' },
   container: { padding: 20 },
   pageTitle: { fontSize: 34, fontWeight: 'bold', marginBottom: 16 },
-  templateButton: {backgroundColor: '#4a90e2',paddingVertical: 12,paddingHorizontal: 16,borderRadius: 12,alignItems: 'center',marginBottom: 20,},
+  templateButton: {
+    backgroundColor: '#4a90e2',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginBottom: 20,
+  },
   templateButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
   sectionHeader: { fontWeight: 'bold', fontSize: 18, marginBottom: 8 },
-  card: {backgroundColor: '#f2f2f2',padding: 12,borderRadius: 8,marginBottom: 12,},
+  card: {
+    backgroundColor: '#f2f2f2',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
   cardTitle: { fontWeight: 'bold', fontSize: 16 },
   cardSub: { marginTop: 4, color: '#555' },
-  modalOverlay: {flex: 1,backgroundColor: 'rgba(0,0,0,0.4)',justifyContent: 'center',alignItems: 'center',},
-  modal: {backgroundColor: '#fff',borderRadius: 16,padding: 20,width: '90%',position: 'relative',},
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modal: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    width: '90%',
+    position: 'relative',
+  },
   modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 12 },
-  modalContent: {flexDirection: 'row',justifyContent: 'space-between',marginBottom: 20,},
+  modalContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
   column: { flex: 1 },
   columnHeader: { fontWeight: 'bold', marginBottom: 8 },
-  startButton: {backgroundColor: '#4a90e2',paddingVertical: 15,borderRadius: 12,alignItems: 'center',marginTop: 8,},
+  startButton: {
+    backgroundColor: '#4a90e2',
+    paddingVertical: 15,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 8,
+  },
   startButtonText: { color: '#fff', fontWeight: '600' },
-  modalClose: {position: 'absolute',top: 10,right: 16,fontSize: 20,color: '#999'},
+  modalClose: {
+    position: 'absolute',
+    top: 10,
+    right: 16,
+    fontSize: 20,
+    color: '#999',
+  },
 });
