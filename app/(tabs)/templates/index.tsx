@@ -1,9 +1,9 @@
+import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
+import { collection, getDocs } from 'firebase/firestore';
 import React, { useState } from 'react';
 import { Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../../../firebase';
-import { useFocusEffect } from '@react-navigation/native';
 
 type Template = {
   id: string;
@@ -149,7 +149,25 @@ export default function TemplatesScreen() {
 
             <Pressable
               style={styles.startButton}
-              onPress={() => setModalVisible(false)}
+              onPress={() => {
+                setModalVisible(false);
+
+                if (!selectedTemplate) return;
+
+                const routineExercises = selectedTemplate.exercises.map((name, i) => ({
+                  name,
+                  sets: selectedTemplate.sets?.[i] ?? '',
+                  reps: selectedTemplate.reps?.[i] ?? '',
+                }));
+
+                router.push({
+                  pathname: '/logger/screens/timer',
+                  params: {
+                    routineTitle: selectedTemplate.name,
+                    exercises: JSON.stringify(routineExercises),
+                  },
+                });
+              }}
             >
               <Text style={styles.startButtonText}>Start Workout</Text>
             </Pressable>
