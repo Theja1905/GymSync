@@ -1,8 +1,8 @@
 import { useRouter } from 'expo-router';
+import { addDoc, collection } from 'firebase/firestore';
 import React, { useState } from 'react';
 import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { collection, addDoc } from 'firebase/firestore';
-import { db, auth } from '../../../firebase';  // <-- import auth here
+import { auth, db } from '../../../firebase'; // <-- import auth here
 
 export default function CreateTemplateScreen() {
   const router = useRouter();
@@ -165,26 +165,30 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   addButton: {
-    backgroundColor: '#ddd',
     padding: 12,
-    borderRadius: 8,
+    borderRadius: 20,
     alignItems: 'center',
     marginBottom: 20,
+    alignSelf: 'flex-start',
+    backgroundColor: '#e0f0ff',
+    paddingVertical: 10,
+    paddingHorizontal: 126,
   },
-  addButtonText: { fontWeight: 'bold' },
+  addButtonText: {fontSize: 16,fontWeight: '400',color: '#007AFF',},
   saveButton: {
     backgroundColor: '#4a90e2',
-    padding: 15,
-    borderRadius: 12,
+    padding: 12,
+    borderRadius: 20,
     alignItems: 'center',
+    marginTop: 320,
   },
-  saveButtonText: { color: '#fff', fontWeight: '600' },
+  saveButtonText: { color: '#fff', fontWeight: '600', fontSize: 17 },
   backButton: {
     backgroundColor: '#aaa',
     padding: 12,
-    borderRadius: 8,
+    borderRadius: 20,
     alignItems: 'center',
     marginTop: 12,
   },
-  backButtonText: { color: '#fff', fontWeight: '600' },
+  backButtonText: { color: '#fff', fontWeight: '600', fontSize: 17 },
 });

@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import React, { useState } from 'react';
 import { Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { db, auth } from '../../../firebase';  
+import { auth, db } from '../../../firebase';
 
 type Template = {
   id: string;
@@ -99,17 +99,27 @@ export default function TemplatesScreen() {
         </Pressable>
 
         <Text style={styles.sectionHeader}>My Templates</Text>
-        {myTemplates.map((item) => (
-          <Pressable
-            key={item.id}
-            style={styles.card}
-            onPress={() => openTemplate(item)}
-          >
-            <Text style={styles.cardTitle}>{item.name}</Text>
-            <Text style={styles.cardSub}>{item.exercises.join(', ')}</Text>
-          </Pressable>
-        ))}
 
+        {myTemplates.length === 0 ? (
+          <>
+            <Text style={styles.emptyMessage}>You haven’t saved any templates yet.</Text>
+            <View style={{ height: 0 }} />
+          </>
+        ) : (
+          myTemplates.map((item) => (
+            <Pressable
+              key={item.id}
+              style={styles.card}
+              onPress={() => openTemplate(item)}
+            >
+              <Text style={styles.cardTitle}>{item.name}</Text>
+              <Text style={styles.cardSub}>{item.exercises.join(', ')}</Text>
+            </Pressable>
+          ))
+        )}
+
+
+        {myTemplates.length === 0 && <View style={{ height: 40 }} />}
         <Text style={styles.sectionHeader}>Example Templates</Text>
         {exampleTemplates.map((item) => (
           <Pressable
@@ -196,14 +206,14 @@ const styles = StyleSheet.create({
   pageTitle: { fontSize: 34, fontWeight: 'bold', marginBottom: 16 },
   templateButton: {
     backgroundColor: '#4a90e2',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 12,
+    paddingVertical: 9,
+    paddingHorizontal: 10,
+    borderRadius: 20,
     alignItems: 'center',
     marginBottom: 20,
   },
   templateButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  sectionHeader: { fontWeight: 'bold', fontSize: 18, marginBottom: 8 },
+  sectionHeader: { fontWeight: 'bold', fontSize: 24, marginBottom: 7},
   card: {
     backgroundColor: '#f2f2f2',
     padding: 12,
@@ -232,7 +242,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   column: { flex: 1 },
-  columnHeader: { fontWeight: 'bold', marginBottom: 8 },
+  columnHeader: { fontWeight: 'bold', marginBottom: 8},
   startButton: {
     backgroundColor: '#4a90e2',
     paddingVertical: 15,
@@ -247,5 +257,12 @@ const styles = StyleSheet.create({
     right: 16,
     fontSize: 20,
     color: '#999',
+  },
+  emptyMessage: {
+  fontSize: 16,
+  color: '#888',
+  marginTop: 4,
+  marginBottom: -23,
+  textAlign: 'left',
   },
 });
