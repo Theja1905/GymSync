@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { addDoc, collection } from 'firebase/firestore';
 import React, { useState } from 'react';
-import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { auth, db } from '../../../firebase'; // <-- import auth here
 
 export default function CreateTemplateScreen() {
@@ -15,6 +15,25 @@ export default function CreateTemplateScreen() {
     setExercises([...exercises, '']);
     setSets([...sets, 0]);
     setReps([...reps, 0]);
+  };
+
+  const removeExercise = (index: number) => {
+    if (exercises.length === 1) {
+      Alert.alert('You must have at least one exercise.');
+      return;
+    }
+    
+    const newExercises = [...exercises];
+    const newSets = [...sets];
+    const newReps = [...reps];
+
+    newExercises.splice(index, 1);
+    newSets.splice(index, 1);
+    newReps.splice(index, 1);
+
+    setExercises(newExercises);
+    setSets(newSets);
+    setReps(newReps);
   };
 
   const updateExercise = (index: number, value: string) => {
@@ -36,8 +55,8 @@ export default function CreateTemplateScreen() {
   };
 
   const saveTemplate = async () => {
-    const validExercises = exercises.filter(e => e.trim() !== '');
-    const uid = auth.currentUser?.uid; // get current user uid
+    const validExercises = exercises.filter((e) => e.trim() !== '');
+    const uid = auth.currentUser?.uid;
     if (!templateName || validExercises.length === 0 || !uid) return;
 
     const templatesRef = collection(db, 'templates');
@@ -46,7 +65,7 @@ export default function CreateTemplateScreen() {
       exercises: validExercises,
       sets,
       reps,
-      uid, // save user id with the template
+      uid,
     });
 
     router.back();
@@ -98,6 +117,10 @@ export default function CreateTemplateScreen() {
                 onChangeText={(text) => updateRep(index, text)}
               />
             </View>
+
+            <Pressable onPress={() => removeExercise(index)} style={styles.deleteButton}>
+              <Text style={styles.deleteButtonText}>✕</Text>
+            </Pressable>
           </View>
         ))}
 
@@ -164,6 +187,17 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 4,
   },
+  deleteButton: {
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  deleteButtonText: {
+    fontSize: 18,
+    color: '#FF3B30',
+    fontWeight: 'bold',
+  },
   addButton: {
     padding: 12,
     borderRadius: 20,
@@ -174,7 +208,11 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 126,
   },
-  addButtonText: {fontSize: 16,fontWeight: '400',color: '#007AFF',},
+  addButtonText: {
+    fontSize: 16,
+    fontWeight: '400',
+    color: '#007AFF',
+  },
   saveButton: {
     backgroundColor: '#4a90e2',
     padding: 12,

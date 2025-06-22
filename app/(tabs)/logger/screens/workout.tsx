@@ -28,6 +28,14 @@ export default function WorkoutScreen() {
     ]);
   };
 
+  const removeExercise = (id: string) => {
+    if (exercises.length === 1) {
+      Alert.alert('You must have at least one exercise.');
+      return;
+    }
+    setExercises((prev) => prev.filter((ex) => ex.id !== id));
+  };
+
   const handleStartTimer = async () => {
     if (!routineTitle.trim()) {
       Alert.alert('Please enter a workout routine title');
@@ -109,6 +117,12 @@ export default function WorkoutScreen() {
                 keyboardType="numeric"
                 onChangeText={(text) => updateExercise(exercise.id, 'sets', text)}
               />
+              <TouchableOpacity
+                onPress={() => removeExercise(exercise.id)}
+                style={styles.deleteButton}
+              >
+                <Text style={styles.deleteButtonText}>✕</Text>
+              </TouchableOpacity>
             </View>
           ))}
 
@@ -152,4 +166,6 @@ const styles = StyleSheet.create({
   timerButton: {backgroundColor: '#4a90e2',paddingVertical: 10,borderRadius: 20,alignItems: 'center',marginBottom: 12,},
   backButton: {backgroundColor: '#BBBBBB',},
   timerText: {color: '#fff',fontWeight: '600',fontSize: 17, },
+  deleteButton: {paddingHorizontal: 8,paddingVertical: 8,justifyContent: 'center',alignItems: 'center',},
+  deleteButtonText: {fontSize: 18,color: '#FF3B30',fontWeight: 'bold',},
 });
