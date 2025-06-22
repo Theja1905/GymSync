@@ -1,7 +1,16 @@
 import { useRouter } from 'expo-router';
 import { addDoc, collection } from 'firebase/firestore';
 import React, { useState } from 'react';
-import { Alert, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  Alert,
+  Pressable,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { auth, db } from '../../../firebase'; // <-- import auth here
 
 export default function CreateTemplateScreen() {
@@ -22,7 +31,7 @@ export default function CreateTemplateScreen() {
       Alert.alert('You must have at least one exercise.');
       return;
     }
-    
+
     const newExercises = [...exercises];
     const newSets = [...sets];
     const newReps = [...reps];
@@ -168,7 +177,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 10,
     paddingHorizontal: 20,
-    width: 68,
+    width: 53,
     marginBottom: 12,
     textAlign: 'center',
   },
@@ -208,11 +217,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 126,
   },
-  addButtonText: {
-    fontSize: 16,
-    fontWeight: '400',
-    color: '#007AFF',
-  },
+  addButtonText: { fontSize: 16, fontWeight: '400', color: '#007AFF' },
   saveButton: {
     backgroundColor: '#4a90e2',
     padding: 12,
