@@ -1,16 +1,7 @@
 import { useRouter } from 'expo-router';
 import { addDoc, collection } from 'firebase/firestore';
 import React, { useState } from 'react';
-import {
-  Alert,
-  Pressable,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { Alert, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View, } from 'react-native';
 import { auth, db } from '../../../firebase';
 
 export default function CreateTemplateScreen() {
@@ -154,17 +145,17 @@ const styles = StyleSheet.create({
   container: { padding: 20 },
   title: { fontSize: 28, fontWeight: 'bold', marginBottom: 20 },
   inputTemplateName: {borderColor: '#ccc',borderWidth: 1,borderRadius: 8,padding: 10,width: 350,marginBottom: 12,textAlign: 'center',},
-  inputExerciseName: {borderColor: '#ccc',borderWidth: 1,borderRadius: 8,padding: 10,width: 190,marginBottom: 12,textAlign: 'center',},
-  inputSetsReps: {borderColor: '#ccc',borderWidth: 1,borderRadius: 8,padding: 10,paddingHorizontal: 20,width: 53,marginBottom: 12,textAlign: 'center',},
-  exerciseRow: {flexDirection: 'row',alignItems: 'center',marginBottom: 20,justifyContent: 'space-between',width: '100%',},
+  inputExerciseName: {borderColor: '#ccc',borderWidth: 1,borderRadius: 8,padding: 10,width: 170,marginBottom: 12,textAlign: 'center',},
+  inputSetsReps: {borderColor: '#ccc',borderWidth: 1,borderRadius: 8,padding: 10,paddingHorizontal: 20,width: 60,marginBottom: 12,textAlign: 'center',},
+  exerciseRow: {flexDirection: 'row',alignItems: 'center',marginBottom: 20,justifyContent: 'space-between',width: '100%'},
   exerciseColumn: {flexDirection: 'column',marginRight: 12,},
-  label: {fontWeight: 'bold', marginBottom: 4,},
+  label: {fontWeight: 'bold',marginBottom: 4,},
   deleteButton: {paddingHorizontal: 8,paddingVertical: 8,justifyContent: 'center',alignItems: 'center',},
   deleteButtonText: {fontSize: 18,color: '#FF3B30',fontWeight: 'bold',},
   addButton: {padding: 12,borderRadius: 20,alignItems: 'center',marginBottom: 20,alignSelf: 'flex-start',backgroundColor: '#e0f0ff',paddingVertical: 10,paddingHorizontal: 126,},
-  addButtonText: { fontSize: 16, fontWeight: '400', color: '#007AFF' },
-  saveButton: {backgroundColor: '#4a90e2',padding: 12,borderRadius: 20,alignItems: 'center',marginTop: 320,},
+  addButtonText: { fontSize: 14, fontWeight: '400', color: '#007AFF' },
+  saveButton: {backgroundColor: '#4a90e2',padding: 12,borderRadius: 20,alignItems: 'center',marginTop: 200,},
   saveButtonText: { color: '#fff', fontWeight: '600', fontSize: 17 },
-  backButton: {backgroundColor: '#aaa',padding: 12,borderRadius: 20,alignItems: 'center',marginTop: 12,},
+  backButton: {backgroundColor: '#aaa',padding: 12,borderRadius: 20,alignItems: 'center',marginTop: 8,},
   backButtonText: { color: '#fff', fontWeight: '600', fontSize: 17 },
 });

@@ -75,11 +75,6 @@ const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' },
   title: { fontSize: 50, fontWeight: 'bold', marginBottom: 40 },
   timer: { fontSize: 48, fontWeight: 'bold', marginBottom: 40 },
-  finishButton: {
-    backgroundColor: '#4caf50',
-    paddingVertical: 10,
-    paddingHorizontal: 70,
-    borderRadius: 30,
-  },
+  finishButton: {backgroundColor: '#4caf50',paddingVertical: 10,paddingHorizontal: 70,borderRadius: 30,},
   finishText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
 });
