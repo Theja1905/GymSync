@@ -70,7 +70,6 @@ export default function TemplatesScreen() {
         if (!uid) return;
 
         const templatesRef = collection(db, 'templates');
-        // Query only templates where uid equals current user uid
         const q = query(templatesRef, where('uid', '==', uid));
         const snapshot = await getDocs(q);
 
@@ -204,8 +203,7 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#fff' },
   container: { padding: 20 },
   pageTitle: { fontSize: 34, fontWeight: 'bold', marginBottom: 16 },
-  templateButton: {
-    backgroundColor: '#4a90e2',
+  templateButton: {backgroundColor: '#4a90e2',
     paddingVertical: 9,
     paddingHorizontal: 10,
     borderRadius: 20,
@@ -222,47 +220,14 @@ const styles = StyleSheet.create({
   },
   cardTitle: { fontWeight: 'bold', fontSize: 16 },
   cardSub: { marginTop: 4, color: '#555' },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modal: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 20,
-    width: '90%',
-    position: 'relative',
-  },
+  modalOverlay: {flex: 1,backgroundColor: 'rgba(0,0,0,0.4)',justifyContent: 'center',alignItems: 'center',},
+  modal: {backgroundColor: '#fff',borderRadius: 16,padding: 20,width: '90%',position: 'relative',},
   modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 12 },
-  modalContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-  },
+  modalContent: {flexDirection: 'row',justifyContent: 'space-between',marginBottom: 20,},
   column: { flex: 1 },
   columnHeader: { fontWeight: 'bold', marginBottom: 8},
-  startButton: {
-    backgroundColor: '#4a90e2',
-    paddingVertical: 15,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginTop: 8,
-  },
+  startButton: {backgroundColor: '#4a90e2',paddingVertical: 15,borderRadius: 12,alignItems: 'center',marginTop: 8,},
   startButtonText: { color: '#fff', fontWeight: '600' },
-  modalClose: {
-    position: 'absolute',
-    top: 10,
-    right: 16,
-    fontSize: 20,
-    color: '#999',
-  },
-  emptyMessage: {
-  fontSize: 16,
-  color: '#888',
-  marginTop: 4,
-  marginBottom: -23,
-  textAlign: 'left',
-  },
+  modalClose: {position: 'absolute',top: 10,right: 16,fontSize: 20,color: '#999',},
+  emptyMessage: {fontSize: 16,color: '#888',marginTop: 4,marginBottom: -23,textAlign: 'left',},
 });

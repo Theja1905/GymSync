@@ -2,7 +2,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { addDoc, collection, Timestamp } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { auth, db } from '../../../../firebase'; // Adjust if needed
+import { auth, db } from '../../../../firebase';
 
 export default function TimerScreen() {
   const router = useRouter();
@@ -12,7 +12,6 @@ export default function TimerScreen() {
   const [seconds, setSeconds] = useState(0);
   const [isRunning, setIsRunning] = useState(true);
 
-  // 🔁 Reset timer when routine changes
   useEffect(() => {
     setSeconds(0);
     setIsRunning(true);
