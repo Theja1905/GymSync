@@ -14,6 +14,8 @@ export default function TabsLayout() {
           iconName = 'barbell-outline';
         } else if (route.name === 'profile') {
           iconName = 'person-outline';
+        } else if (route.name === 'dashboard/index') {
+          iconName = 'stats-chart-outline'; 
         } else {
           iconName = 'alert-circle-outline'; // fallback icon
         }
@@ -30,6 +32,10 @@ export default function TabsLayout() {
       }}
     >
       <Tabs.Screen
+        name="dashboard/index"
+        options={{ title: 'Dashboard', headerShown: false }}
+      />
+      <Tabs.Screen
         name="templates"
         options={{ title: 'Templates', headerShown: false }}
       />
@@ -44,3 +50,4 @@ export default function TabsLayout() {
     </Tabs>
   );
 }
+
