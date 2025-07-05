@@ -1,9 +1,9 @@
-import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { addDoc, collection, Timestamp } from 'firebase/firestore';
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { auth, db } from '../../../../firebase';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 export default function TimerScreen() {
   const router = useRouter();
@@ -20,20 +20,16 @@ export default function TimerScreen() {
   const [isRunning, setIsRunning] = useState(initialIsRunning);
   const [restSeconds, setRestSeconds] = useState(60);
 
-  // Sync isRunning state when route params change
   useEffect(() => {
     if (params.isRunning !== undefined) {
-      // Convert string param to boolean
       setIsRunning(params.isRunning === 'true');
     }
-    // Also sync seconds if changed (optional)
     if (params.seconds !== undefined) {
       const sec = parseInt(params.seconds as string);
       if (!isNaN(sec)) setSeconds(sec);
     }
   }, [params.isRunning, params.seconds]);
 
-  // Timer interval: increments seconds only if running
   useFocusEffect(
     useCallback(() => {
       if (!isRunning) return;
@@ -53,7 +49,6 @@ export default function TimerScreen() {
   };
 
   const handlePause = () => {
-    // Pause timer, navigate to rest screen with current timer state
     setIsRunning(false);
     router.push({
       pathname: '/(tabs)/logger/screens/rest',
@@ -72,7 +67,7 @@ export default function TimerScreen() {
       await addDoc(collection(db, 'workouts'), {
         routineTitle,
         exercises: parsedExercises,
-        duration: formatTime(seconds),
+        duration: Math.floor(seconds / 60), // store as minutes
         createdAt: Timestamp.now(),
         userId: auth.currentUser?.uid,
         date: new Date().toLocaleDateString(),
@@ -87,7 +82,6 @@ export default function TimerScreen() {
     <View style={styles.container}>
       <Text style={styles.title}>Workout Timer</Text>
 
-      {/* Timer Display */}
       <View style={styles.timerDisplay}>
         <MaterialCommunityIcons name="timer-outline" size={40} color="#4a90e2" />
         <Text style={styles.timerText}>{formatTime(seconds)}</Text>
@@ -100,7 +94,6 @@ export default function TimerScreen() {
         </Text>
       ))}
 
-      {/* Rest Duration Picker */}
       <View style={styles.restSection}>
         <Text style={styles.restLabel}>Select Rest Duration</Text>
         <View style={styles.restOptions}>
@@ -119,14 +112,12 @@ export default function TimerScreen() {
         </View>
       </View>
 
-      {/* Pause Button - shows only when running */}
       {isRunning && (
         <TouchableOpacity style={styles.pauseButton} onPress={handlePause}>
           <Text style={styles.pauseText}>Pause for Rest</Text>
         </TouchableOpacity>
       )}
 
-      {/* Finish Workout Button */}
       <TouchableOpacity style={styles.finishButton} onPress={handleFinishWorkout}>
         <Text style={styles.finishText}>Finish Workout</Text>
       </TouchableOpacity>
@@ -194,7 +185,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   pauseButton: {
-    backgroundColor: '#7e57c2', // Purple
+    backgroundColor: '#7e57c2',
     paddingVertical: 12,
     paddingHorizontal: 70,
     borderRadius: 30,
@@ -206,7 +197,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   finishButton: {
-    backgroundColor: '#3a8a43', // Dark green
+    backgroundColor: '#3a8a43',
     paddingVertical: 12,
     paddingHorizontal: 70,
     borderRadius: 30,

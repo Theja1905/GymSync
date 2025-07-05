@@ -5,6 +5,7 @@ import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { auth, db } from '../../../firebase';
 
+
 type WorkoutLog = {
   id: string;
   date: string;
@@ -16,19 +17,23 @@ type WorkoutLog = {
   }[];
 };
 
+
 export default function WorkoutLoggerScreen() {
   const [workoutLogs, setWorkoutLogs] = useState<WorkoutLog[]>([]);
   const router = useRouter();
 
+
   useFocusEffect(
     useCallback(() => {
       if (!auth.currentUser) return;
+
 
       const q = query(
         collection(db, 'workouts'),
         where('userId', '==', auth.currentUser.uid),
         orderBy('createdAt', 'desc')
       );
+
 
       const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const logs: WorkoutLog[] = [];
@@ -44,14 +49,17 @@ export default function WorkoutLoggerScreen() {
         setWorkoutLogs(logs);
       });
 
+
       return () => unsubscribe();
     }, [])
   );
+
 
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>Start Workout</Text>
       <Text style={styles.subtitle}>Quick Start</Text>
+
 
       <TouchableOpacity
         style={styles.startButton}
@@ -62,7 +70,9 @@ export default function WorkoutLoggerScreen() {
         <Text style={styles.startButtonText}>Start Workout</Text>
       </TouchableOpacity>
 
+
       <Text style={styles.loggerTitle}>Workout Logger</Text>
+
 
       <FlatList
         data={workoutLogs}
@@ -78,6 +88,7 @@ export default function WorkoutLoggerScreen() {
               <View style={styles.column}><Text style={styles.columnTitle}>Sets</Text></View>
               <View style={styles.column}><Text style={styles.columnTitle}>Reps</Text></View>
             </View>
+
 
             {item.exercises.map((ex, i) => (
               <View key={i} style={styles.row}>
@@ -97,6 +108,7 @@ export default function WorkoutLoggerScreen() {
     </SafeAreaView>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 20, backgroundColor: '#fff' },

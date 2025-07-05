@@ -10,9 +10,6 @@ import {
   View,
 } from 'react-native';
 
-import { addDoc, collection } from 'firebase/firestore';
-import { db } from '../../../../firebase'; // <-- update path to your firebase config
-
 export default function WorkoutScreen() {
   const router = useRouter();
 
@@ -38,7 +35,7 @@ export default function WorkoutScreen() {
     ]);
   };
 
-  const handleStartTimer = async () => {
+  const handleStartTimer = () => {
     if (!routineTitle.trim()) {
       Alert.alert('Please enter a workout routine title');
       return;
@@ -53,29 +50,18 @@ export default function WorkoutScreen() {
       routineTitle,
       exercises: exercises.map((e) => ({
         name: e.name,
-        reps: e.reps,
-        sets: e.sets,
+        reps: Number(e.reps),
+        sets: Number(e.sets),
       })),
-      createdAt: new Date(),
     };
 
-    try {
-      const docRef = await addDoc(collection(db, 'workouts'), workoutData);
-
-      router.push({
-        pathname: '/logger/screens/timer',
-        params: {
-          routineTitle,
-          exercises: JSON.stringify(
-            workoutData.exercises.map(({ name, sets }) => ({ name, sets }))
-          ),
-          workoutId: docRef.id,
-        },
-      });
-    } catch (error) {
-      console.error('Error saving workout:', error);
-      Alert.alert('Error saving workout. Please try again.');
-    }
+    router.push({
+      pathname: '/logger/screens/timer',
+      params: {
+        routineTitle,
+        exercises: JSON.stringify(workoutData.exercises),
+      },
+    });
   };
 
   return (
@@ -128,7 +114,6 @@ export default function WorkoutScreen() {
         </View>
       </ScrollView>
 
-      {/* Fixed Footer Buttons */}
       <View style={styles.footer}>
         <TouchableOpacity style={styles.timerButton} onPress={handleStartTimer}>
           <Text style={styles.timerText}>Start Timer</Text>
@@ -146,25 +131,15 @@ export default function WorkoutScreen() {
 }
 
 const styles = StyleSheet.create({
-  page: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  scrollView: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
+  page: { flex: 1, backgroundColor: '#fff' },
+  scrollView: { flex: 1, backgroundColor: '#fff' },
   container: {
     paddingTop: 80,
     paddingHorizontal: 24,
-    paddingBottom: 40, // leave space above fixed buttons
+    paddingBottom: 40,
     alignItems: 'stretch',
   },
-  title: {
-    fontSize: 32,
-    fontWeight: '700',
-    marginBottom: 20,
-  },
+  title: { fontSize: 32, fontWeight: '700', marginBottom: 20 },
   routineInput: {
     borderWidth: 1,
     borderColor: '#ccc',
@@ -241,7 +216,6 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     paddingTop: 10,
     backgroundColor: '#fff',
-
   },
   timerButton: {
     backgroundColor: '#4a90e2',

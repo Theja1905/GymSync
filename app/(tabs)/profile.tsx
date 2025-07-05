@@ -1,19 +1,28 @@
-import { addDoc, collection, doc, getDoc, getDocs, query, setDoc, where, writeBatch } from 'firebase/firestore';
+import { Ionicons } from '@expo/vector-icons';
+import {
+  addDoc, collection, doc, getDoc, getDocs, query, setDoc, where, writeBatch,
+} from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+  Alert,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { auth, db } from '../../firebase';
-
 
 const fitnessLevels = ['Beginner', 'Intermediate', 'Advanced'] as const;
 const workoutFocusOptions = ['Strength', 'Cardio', 'Flexibility'] as const;
 const fitnessGoals = ['Weight Loss', 'Muscle Gain', 'Endurance'] as const;
 
-
 type FitnessLevel = typeof fitnessLevels[number];
 type WorkoutFocus = typeof workoutFocusOptions[number];
 type FitnessGoal = typeof fitnessGoals[number];
-
 
 type Template = {
   id?: string;
@@ -24,7 +33,6 @@ type Template = {
   uid?: string;
   recommended?: boolean;
 };
-
 
 function getRecommendedTemplates(
   fitnessLevel: FitnessLevel,
@@ -196,16 +204,14 @@ function getRecommendedTemplates(
   return uniqueTemplates.slice(0, 4);
 }
 
-
 export default function UserProfile() {
-  const [age, setAge] = useState<string>('');
-  const [weight, setWeight] = useState<string>('');
-  const [height, setHeight] = useState<string>('');
+  const [age, setAge] = useState('');
+  const [weight, setWeight] = useState('');
+  const [height, setHeight] = useState('');
   const [fitnessLevel, setFitnessLevel] = useState<FitnessLevel>(fitnessLevels[0]);
   const [workoutFocus, setWorkoutFocus] = useState<WorkoutFocus[]>([]);
   const [goal, setGoal] = useState<FitnessGoal>(fitnessGoals[0]);
-  const [workoutFrequency, setWorkoutFrequency] = useState<string>('');
-
+  const [workoutFrequency, setWorkoutFrequency] = useState('');
 
   const toggleFocus = (focus: WorkoutFocus) => {
     setWorkoutFocus((prev) =>
@@ -213,17 +219,14 @@ export default function UserProfile() {
     );
   };
 
-
   useEffect(() => {
     const fetchProfile = async () => {
       const user = auth.currentUser;
       if (!user) return;
 
-
       try {
         const docRef = doc(db, 'profiles', user.uid);
         const docSnap = await getDoc(docRef);
-
 
         if (docSnap.exists()) {
           const data = docSnap.data();
@@ -242,14 +245,12 @@ export default function UserProfile() {
     fetchProfile();
   }, []);
 
-
   const onSave = async () => {
     const user = auth.currentUser;
     if (!user) {
       Alert.alert('Error', 'User not logged in.');
       return;
     }
-
 
     const profileData = {
       age,
@@ -314,124 +315,146 @@ export default function UserProfile() {
     }
   };
 
-
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+    <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.header}>Profile</Text>
 
+        <View style={styles.card}>
+          <View style={styles.inputGroup}>
+            <Ionicons name="person-outline" size={20} color="#666" />
+            <Text style={styles.label}>Age</Text>
+          </View>
+          <TextInput
+            style={styles.input}
+            value={age}
+            keyboardType="number-pad"
+            onChangeText={setAge}
+            placeholder="Enter your age"
+          />
 
-        <Text style={styles.label}>Age</Text>
-        <TextInput
-          style={styles.input}
-          value={age}
-          keyboardType="number-pad"
-          onChangeText={setAge}
-          placeholder="Enter your age"
-        />
+          <View style={styles.inputGroup}>
+            <Ionicons name="scale-outline" size={20} color="#666" />
+            <Text style={styles.label}>Weight (kg)</Text>
+          </View>
+          <TextInput
+            style={styles.input}
+            value={weight}
+            keyboardType="number-pad"
+            onChangeText={setWeight}
+            placeholder="Enter your weight"
+          />
 
-
-        <Text style={styles.label}>Weight (kg)</Text>
-        <TextInput
-          style={styles.input}
-          value={weight}
-          keyboardType="number-pad"
-          onChangeText={setWeight}
-          placeholder="Enter your weight"
-        />
-
-
-        <Text style={styles.label}>Height (cm)</Text>
-        <TextInput
-          style={styles.input}
-          value={height}
-          keyboardType="number-pad"
-          onChangeText={setHeight}
-          placeholder="Enter your height"
-        />
-
-
-        <Text style={styles.label}>Fitness Level</Text>
-        <View style={styles.pickerContainer}>
-          {fitnessLevels.map((level) => (
-            <TouchableOpacity
-              key={level}
-              style={[
-                styles.pickerOption,
-                fitnessLevel === level && styles.pickerOptionSelected,
-              ]}
-              onPress={() => setFitnessLevel(level)}
-            >
-              <Text
-                style={[
-                  styles.pickerOptionText,
-                  fitnessLevel === level && styles.pickerOptionTextSelected,
-                ]}
-              >
-                {level}
-              </Text>
-            </TouchableOpacity>
-          ))}
+          <View style={styles.inputGroup}>
+            <Ionicons name="body-outline" size={20} color="#666" />
+            <Text style={styles.label}>Height (cm)</Text>
+          </View>
+          <TextInput
+            style={styles.input}
+            value={height}
+            keyboardType="number-pad"
+            onChangeText={setHeight}
+            placeholder="Enter your height"
+          />
         </View>
 
-
-        <Text style={styles.label}>Workout Focus Areas</Text>
-        <View style={styles.pickerContainer}>
-          {workoutFocusOptions.map((focus) => (
-            <TouchableOpacity
-              key={focus}
-              style={[
-                styles.pickerOption,
-                workoutFocus.includes(focus) && styles.pickerOptionSelected,
-              ]}
-              onPress={() => toggleFocus(focus)}
-            >
-              <Text
+        <View style={styles.card}>
+          <View style={styles.inputGroup}>
+            <Ionicons name="fitness-outline" size={20} color="#666" />
+            <Text style={styles.label}>Fitness Level</Text>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scrollRow}>
+            {fitnessLevels.map((level) => (
+              <TouchableOpacity
+                key={level}
                 style={[
-                  styles.pickerOptionText,
-                  workoutFocus.includes(focus) && styles.pickerOptionTextSelected,
+                  styles.pickerOptionSmall,
+                  fitnessLevel === level && styles.pickerOptionSelected,
                 ]}
+                onPress={() => setFitnessLevel(level)}
               >
-                {focus}
-              </Text>
-            </TouchableOpacity>
-          ))}
+                <Text
+                  style={[
+                    styles.pickerOptionText,
+                    fitnessLevel === level && styles.pickerOptionTextSelected,
+                  ]}
+                >
+                  {level}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
         </View>
 
-
-        <Text style={styles.label}>Fitness Goal</Text>
-        <View style={styles.pickerContainer}>
-          {fitnessGoals.map((g) => (
-            <TouchableOpacity
-              key={g}
-              style={[
-                styles.pickerOption,
-                goal === g && styles.pickerOptionSelected,
-              ]}
-              onPress={() => setGoal(g)}
-            >
-              <Text
+        <View style={styles.card}>
+          <View style={styles.inputGroup}>
+            <Ionicons name="flash-outline" size={20} color="#666" />
+            <Text style={styles.label}>Workout Focus Areas</Text>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scrollRow}>
+            {workoutFocusOptions.map((focus) => (
+              <TouchableOpacity
+                key={focus}
                 style={[
-                  styles.pickerOptionText,
-                  goal === g && styles.pickerOptionTextSelected,
+                  styles.pickerOptionSmall,
+                  workoutFocus.includes(focus) && styles.pickerOptionSelected,
                 ]}
+                onPress={() => toggleFocus(focus)}
               >
-                {g}
-              </Text>
-            </TouchableOpacity>
-          ))}
+                <Text
+                  style={[
+                    styles.pickerOptionText,
+                    workoutFocus.includes(focus) && styles.pickerOptionTextSelected,
+                  ]}
+                >
+                  {focus}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
         </View>
 
+        <View style={styles.card}>
+          <View style={styles.inputGroup}>
+            <Ionicons name="flag-outline" size={20} color="#666" />
+            <Text style={styles.label}>Fitness Goal</Text>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scrollRow}>
+            {fitnessGoals.map((g) => (
+              <TouchableOpacity
+                key={g}
+                style={[
+                  styles.pickerOptionSmall,
+                  goal === g && styles.pickerOptionSelected,
+                ]}
+                onPress={() => setGoal(g)}
+              >
+                <Text
+                  style={[
+                    styles.pickerOptionText,
+                    goal === g && styles.pickerOptionTextSelected,
+                  ]}
+                >
+                  {g}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
 
-        <Text style={styles.label}>Workout Frequency (Workouts per week)</Text>
-        <TextInput
-          style={styles.input}
-          keyboardType="number-pad"
-          placeholder="e.g. 3"
-          value={workoutFrequency}
-          onChangeText={setWorkoutFrequency}
-        />
-
+        <View style={styles.card}>
+          <View style={styles.inputGroup}>
+            <Ionicons name="repeat-outline" size={20} color="#666" />
+            <Text style={styles.label}>Workout Frequency (Workouts per week)</Text>
+          </View>
+          <TextInput
+            style={styles.input}
+            keyboardType="number-pad"
+            placeholder="e.g. 3"
+            value={workoutFrequency}
+            onChangeText={setWorkoutFrequency}
+          />
+        </View>
 
         <TouchableOpacity style={styles.saveButton} onPress={onSave}>
           <Text style={styles.saveButtonText}>Save Profile</Text>
@@ -441,44 +464,84 @@ export default function UserProfile() {
   );
 }
 
-
 const styles = StyleSheet.create({
-  container: { padding: 20, paddingBottom: 40, backgroundColor: '#fff' },
-  header: { fontSize: 32, fontWeight: '700', marginBottom: 5, textAlign: 'left' },
-  label: { fontSize: 16, marginTop: 15, marginBottom: 8, fontWeight: '600', color: '#333' },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    borderRadius: 8,
-    fontSize: 16,
+  safeArea: { flex: 1, backgroundColor: '#f6f8fc' },
+  container: { paddingVertical: 25, paddingHorizontal: 20, paddingBottom: 40 },
+  header: { fontSize: 34, fontWeight: '700', marginBottom: 20, color: '#222' },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 4,
   },
-  pickerContainer: { flexDirection: 'row', flexWrap: 'wrap' },
-  pickerOption: {
+  inputGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 6,
+  },
+  label: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: '#444',
+  },
+  input: {
+    backgroundColor: '#f0f3f7',
+    borderRadius: 10,
     paddingHorizontal: 15,
+    paddingVertical: Platform.OS === 'ios' ? 14 : 10,
+    fontSize: 16,
+    color: '#222',
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: '#d1d9e6',
+  },
+  scrollRow: {
+    flexDirection: 'row',
+    marginTop: 5,
+  },
+  pickerOptionSmall: {
+    paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#aaa',
+    borderColor: '#bbb',
+    backgroundColor: '#fafbfc',
     marginRight: 10,
-    marginBottom: 10,
   },
-  pickerOptionSelected: { backgroundColor: '#4a90e2', borderColor: '#4a90e2' },
-  pickerOptionText: { color: '#555', fontWeight: '600' },
-  pickerOptionTextSelected: { color: '#fff' },
-  saveButton: {
-    marginTop: 30,
+  pickerOptionSelected: {
     backgroundColor: '#4a90e2',
-    paddingVertical: 11,
-    width: 280,
-    borderRadius: 15,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    alignSelf: 'center',
+    borderColor: '#4a90e2',
+    elevation: 4,
   },
-  saveButtonText: { fontSize: 16, fontWeight: 'bold', color: '#f9f9f9' },
+  pickerOptionText: {
+    color: '#555',
+    fontWeight: '600',
+  },
+  pickerOptionTextSelected: {
+    color: '#fff',
+  },
+  saveButton: {
+    marginTop: 15,
+    backgroundColor: '#4a90e2',
+    paddingVertical: 14,
+    borderRadius: 30,
+    alignItems: 'center',
+    shadowColor: '#3a6ad9',
+    shadowOpacity: 0.6,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 5 },
+    elevation: 6,
+  },
+  saveButtonText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#fff',
+  },
 });
-
-
