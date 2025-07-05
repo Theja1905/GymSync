@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -9,15 +9,8 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
-import {
-  collection,
-  query,
-  where,
-  Timestamp,
-  onSnapshot,
-} from 'firebase/firestore';
-import { auth, db } from '../../../../firebase';
-import { useFocusEffect } from '@react-navigation/native';
+import { collection, getDocs, query, where, Timestamp, doc, getDoc } from 'firebase/firestore';
+import { auth, db } from '../../../firebase';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -43,134 +36,137 @@ export default function WeeklyDashboardScreen() {
   const [userGoal, setUserGoal] = useState<FitnessGoal | null>(null);
   const [workoutFreqGoal, setWorkoutFreqGoal] = useState<number | null>(null);
 
-  // Fetch user goals once on mount
-  React.useEffect(() => {
+  useEffect(() => {
     fetchUserGoal();
+    fetchWorkoutData();
   }, []);
-
-  // Use realtime listener on focus for workout data
-  useFocusEffect(
-    useCallback(() => {
-      const user = auth.currentUser;
-      if (!user) return;
-
-      const today = new Date();
-      const day = today.getDay();
-      // Calculate Monday as start of week
-      const diffToMonday = (day === 0 ? -6 : 1) - day;
-      const startOfWeek = new Date(today);
-      startOfWeek.setDate(today.getDate() + diffToMonday);
-      startOfWeek.setHours(0, 0, 0, 0);
-
-      const endOfWeek = new Date(startOfWeek);
-      endOfWeek.setDate(startOfWeek.getDate() + 6);
-      endOfWeek.setHours(23, 59, 59, 999);
-
-      const workoutRef = collection(db, 'workouts');
-      const q = query(
-        workoutRef,
-        where('userId', '==', user.uid),
-        where('createdAt', '>=', Timestamp.fromDate(startOfWeek)),
-        where('createdAt', '<=', Timestamp.fromDate(endOfWeek))
-      );
-
-      // Subscribe to realtime updates
-      const unsubscribe = onSnapshot(q, (snapshot) => {
-        const tempHours = [0, 0, 0, 0, 0, 0, 0];
-        let total = 0;
-        const exerciseMap: Record<string, number> = {};
-        let streak = 0;
-        let lastDate = '';
-        let workoutCount = 0;
-
-        snapshot.forEach((doc) => {
-          const data = doc.data();
-          const createdAt = data.createdAt?.toDate?.();
-          const durationStr = data.duration;
-
-          if (createdAt && durationStr) {
-            workoutCount++;
-
-            const [mins, secs] = durationStr.split(':').map(Number);
-            const totalMins = mins + secs / 60;
-            const durationInHours = totalMins / 60;
-
-            const day = createdAt.getDay();
-            const index = day === 0 ? 6 : day - 1;
-
-            tempHours[index] += durationInHours;
-            total += durationInHours;
-
-            if (Array.isArray(data.exercises)) {
-              data.exercises.forEach((e: { name: string }) => {
-                const name = e.name.toLowerCase();
-                exerciseMap[name] = (exerciseMap[name] || 0) + 1;
-              });
-            }
-
-            const dateStr = createdAt.toDateString();
-            if (dateStr !== lastDate) {
-              streak++;
-              lastDate = dateStr;
-            }
-          }
-        });
-
-        setWeeklyHours(tempHours);
-        setTotalHours(parseFloat(total.toFixed(1)));
-        setCurrentStreak(streak);
-        setTotalWorkouts(workoutCount);
-
-        const top = Object.entries(exerciseMap).sort((a, b) => b[1] - a[1])[0];
-        if (top) {
-          setTopExercise(top[0]);
-          setExerciseCount(top[1]);
-        } else {
-          setTopExercise('');
-          setExerciseCount(0);
-        }
-
-        // Set badges
-        const earnedBadges: Badge[] = [];
-        if (streak >= 7) {
-          earnedBadges.push({
-            id: 'oneWeekStrong',
-            title: '1 Week Strong',
-            description: 'You exercised 7 days in a row!',
-            icon: '🏆',
-          });
-        }
-        if (workoutCount >= 10) {
-          earnedBadges.push({
-            id: 'topPerformer',
-            title: 'Top Performer',
-            description: 'Completed 10+ workouts this week',
-            icon: '🔥',
-          });
-        }
-        setBadges(earnedBadges);
-      });
-
-      return () => unsubscribe();
-    }, [])
-  );
 
   const fetchUserGoal = async () => {
     const user = auth.currentUser;
     if (!user) return;
 
     try {
-      const docRef = db.collection('profiles').doc(user.uid);
-      const docSnap = await docRef.get();
-      if (docSnap.exists) {
+      const docRef = doc(db, 'profiles', user.uid);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
         const data = docSnap.data();
-        setUserGoal(data?.goal || null);
-        const freq = Number(data?.workoutFrequency);
+        setUserGoal(data.goal || null);
+        const freq = Number(data.workoutFrequency);
         setWorkoutFreqGoal(!isNaN(freq) ? freq : null);
       }
     } catch (error) {
       console.error('Error fetching user goal:', error);
     }
+  };
+
+  const fetchWorkoutData = async () => {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const today = new Date();
+
+    const day = today.getDay(); // 0 = Sunday
+    const diffToMonday = (day === 0 ? -6 : 1) - day;
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() + diffToMonday);
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+    endOfWeek.setHours(23, 59, 59, 999);
+
+    const startOfWeekUTC = new Date(startOfWeek.getTime() - startOfWeek.getTimezoneOffset() * 60000);
+    const endOfWeekUTC = new Date(endOfWeek.getTime() - endOfWeek.getTimezoneOffset() * 60000);
+
+    const workoutRef = collection(db, 'workouts');
+    const q = query(
+      workoutRef,
+      where('userId', '==', user.uid),
+      where('createdAt', '>=', Timestamp.fromDate(startOfWeekUTC)),
+      where('createdAt', '<=', Timestamp.fromDate(endOfWeekUTC))
+    );
+
+    const snapshot = await getDocs(q);
+
+    const tempHours = [0, 0, 0, 0, 0, 0, 0];
+    const exerciseMap: Record<string, number> = {};
+    let total = 0;
+    let streak = 0;
+    let lastDate = '';
+    let workoutCount = 0;
+
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      const createdAt = data.createdAt?.toDate?.();
+      const durationStr = data.duration;
+
+      if (
+        createdAt &&
+        durationStr &&
+        createdAt >= startOfWeekUTC &&
+        createdAt <= endOfWeekUTC
+      ) {
+        workoutCount++;
+
+        const [mins, secs] = durationStr.split(':').map(Number);
+        const totalMins = mins + secs / 60;
+        const durationInHours = totalMins / 60;
+
+        const day = createdAt.getDay();
+        const index = day === 0 ? 6 : day - 1;
+
+        tempHours[index] += durationInHours;
+        total += durationInHours;
+
+        if (Array.isArray(data.exercises)) {
+          data.exercises.forEach((e: { name: string }) => {
+            const name = e.name.toLowerCase();
+            exerciseMap[name] = (exerciseMap[name] || 0) + 1;
+          });
+        }
+
+        const dateStr = createdAt.toDateString();
+        if (dateStr !== lastDate) {
+          streak++;
+          lastDate = dateStr;
+        }
+      }
+    });
+
+    setWeeklyHours(tempHours);
+    setTotalHours(parseFloat(total.toFixed(1)));
+    setCurrentStreak(streak);
+    setTotalWorkouts(workoutCount);
+
+    const top = Object.entries(exerciseMap).sort((a, b) => b[1] - a[1])[0];
+    if (top) {
+      setTopExercise(top[0]);
+      setExerciseCount(top[1]);
+    } else {
+      setTopExercise('');
+      setExerciseCount(0);
+    }
+
+    const earnedBadges: Badge[] = [];
+
+    if (streak >= 7) {
+      earnedBadges.push({
+        id: 'oneWeekStrong',
+        title: '1 Week Strong',
+        description: 'You exercised 7 days in a row!',
+        icon: '🏆',
+      });
+    }
+    if (workoutCount >= 10) {
+      earnedBadges.push({
+        id: 'topPerformer',
+        title: 'Top Performer',
+        description: 'Completed 10+ workouts this week',
+        icon: '🔥',
+      });
+    }
+
+    setBadges(earnedBadges);
   };
 
   const formatDuration = (hours: number) => {
@@ -266,7 +262,7 @@ export default function WeeklyDashboardScreen() {
           {badges.length === 0 ? (
             <Text style={{ color: '#777' }}>No badges earned yet. Keep going!</Text>
           ) : (
-            badges.map((badge) => (
+            badges.map(badge => (
               <View key={badge.id} style={styles.badge}>
                 <Text style={styles.badgeIcon}>{badge.icon}</Text>
                 <View style={{ marginLeft: 8 }}>
@@ -306,15 +302,8 @@ const styles = StyleSheet.create({
     width: '80%',
     alignItems: 'center',
   },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    marginBottom: 16,
-  },
-  modalText: {
-    fontSize: 16,
-    marginVertical: 4,
-  },
+  modalTitle: { fontSize: 20, fontWeight: '700', marginBottom: 16 },
+  modalText: { fontSize: 16, marginVertical: 4 },
   closeButton: {
     marginTop: 20,
     paddingVertical: 10,
@@ -322,11 +311,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#4a90e2',
     borderRadius: 8,
   },
-  closeButtonText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 16,
-  },
+  closeButtonText: { color: '#fff', fontWeight: '600', fontSize: 16 },
 
   badgesContainer: {
     marginTop: 20,
@@ -342,15 +327,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 10,
   },
-  badgeIcon: {
-    fontSize: 32,
-  },
-  badgeTitle: {
-    fontWeight: '700',
-    fontSize: 16,
-  },
-  badgeDesc: {
-    fontSize: 14,
-    color: '#555',
-  },
+  badgeIcon: { fontSize: 32 },
+  badgeTitle: { fontWeight: '700', fontSize: 16 },
+  badgeDesc: { fontSize: 14, color: '#555' },
 });
