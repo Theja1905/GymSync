@@ -1,48 +1,78 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import { addDoc, collection, Timestamp } from 'firebase/firestore';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { auth, db } from '../../../../firebase';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 export default function TimerScreen() {
   const router = useRouter();
-  const { routineTitle, exercises } = useLocalSearchParams();
+  const params = useLocalSearchParams();
+
+  const { routineTitle, exercises } = params;
   const parsedExercises = exercises ? JSON.parse(exercises as string) : [];
 
-  const [seconds, setSeconds] = useState(0);
-  const [isRunning, setIsRunning] = useState(true);
+  // Parse seconds and isRunning from params, fallback to defaults
+  const initialSeconds = params.seconds ? parseInt(params.seconds as string) : 0;
+  const initialIsRunning = params.isRunning === 'false' ? false : true;
 
+  const [seconds, setSeconds] = useState(initialSeconds);
+  const [isRunning, setIsRunning] = useState(initialIsRunning);
+  const [restSeconds, setRestSeconds] = useState(60);
+
+  // Sync isRunning state when route params change
   useEffect(() => {
-    setSeconds(0);
-    setIsRunning(true);
-  }, [routineTitle, exercises]);
+    if (params.isRunning !== undefined) {
+      // Convert string param to boolean
+      setIsRunning(params.isRunning === 'true');
+    }
+    // Also sync seconds if changed (optional)
+    if (params.seconds !== undefined) {
+      const sec = parseInt(params.seconds as string);
+      if (!isNaN(sec)) setSeconds(sec);
+    }
+  }, [params.isRunning, params.seconds]);
 
-  useEffect(() => {
-    let interval: number;
+  // Timer interval: increments seconds only if running
+  useFocusEffect(
+    useCallback(() => {
+      if (!isRunning) return;
 
-    if (isRunning) {
-      interval = setInterval(() => {
+      const interval = setInterval(() => {
         setSeconds((prev) => prev + 1);
       }, 1000);
-    }
 
-    return () => clearInterval(interval);
-  }, [isRunning]);
+      return () => clearInterval(interval);
+    }, [isRunning])
+  );
 
-  const formatTime = () => {
-    const mins = String(Math.floor(seconds / 60)).padStart(2, '0');
-    const secs = String(seconds % 60).padStart(2, '0');
+  const formatTime = (totalSeconds: number) => {
+    const mins = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
+    const secs = String(totalSeconds % 60).padStart(2, '0');
     return `${mins}:${secs}`;
+  };
+
+  const handlePause = () => {
+    // Pause timer, navigate to rest screen with current timer state
+    setIsRunning(false);
+    router.push({
+      pathname: '/(tabs)/logger/screens/rest',
+      params: {
+        restSeconds: restSeconds.toString(),
+        seconds: seconds.toString(),
+        routineTitle,
+        exercises,
+      },
+    });
   };
 
   const handleFinishWorkout = async () => {
     setIsRunning(false);
-
     try {
       await addDoc(collection(db, 'workouts'), {
         routineTitle,
         exercises: parsedExercises,
-        duration: formatTime(),
+        duration: formatTime(seconds),
         createdAt: Timestamp.now(),
         userId: auth.currentUser?.uid,
         date: new Date().toLocaleDateString(),
@@ -56,14 +86,47 @@ export default function TimerScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Workout Timer</Text>
-      <Text style={styles.timer}>{formatTime()}</Text>
 
+      {/* Timer Display */}
+      <View style={styles.timerDisplay}>
+        <MaterialCommunityIcons name="timer-outline" size={40} color="#4a90e2" />
+        <Text style={styles.timerText}>{formatTime(seconds)}</Text>
+      </View>
+
+      {/* Exercise List */}
       {parsedExercises.map((ex: any, index: number) => (
-        <Text key={index} style={{ fontSize: 16, marginBottom: 40 }}>
+        <Text key={index} style={styles.exerciseText}>
           {ex.name} - {ex.sets} sets × {ex.reps} reps
         </Text>
       ))}
 
+      {/* Rest Duration Picker */}
+      <View style={styles.restSection}>
+        <Text style={styles.restLabel}>Select Rest Duration</Text>
+        <View style={styles.restOptions}>
+          {[30, 60, 90].map((time) => (
+            <TouchableOpacity
+              key={time}
+              style={[
+                styles.restButton,
+                restSeconds === time && styles.restButtonSelected,
+              ]}
+              onPress={() => setRestSeconds(time)}
+            >
+              <Text style={styles.restButtonText}>{time}s</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+
+      {/* Pause Button - shows only when running */}
+      {isRunning && (
+        <TouchableOpacity style={styles.pauseButton} onPress={handlePause}>
+          <Text style={styles.pauseText}>Pause for Rest</Text>
+        </TouchableOpacity>
+      )}
+
+      {/* Finish Workout Button */}
       <TouchableOpacity style={styles.finishButton} onPress={handleFinishWorkout}>
         <Text style={styles.finishText}>Finish Workout</Text>
       </TouchableOpacity>
@@ -72,9 +135,85 @@ export default function TimerScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' },
-  title: { fontSize: 50, fontWeight: 'bold', marginBottom: 40 },
-  timer: { fontSize: 48, fontWeight: 'bold', marginBottom: 40 },
-  finishButton: {backgroundColor: '#4caf50',paddingVertical: 10,paddingHorizontal: 70,borderRadius: 30,},
-  finishText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+    paddingTop: 170,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+  },
+  title: {
+    fontSize: 34,
+    fontWeight: 'bold',
+    marginBottom: 30,
+    color: '#222',
+  },
+  timerDisplay: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 30,
+    gap: 10,
+  },
+  timerText: {
+    fontSize: 48,
+    fontWeight: 'bold',
+    color: '#4a90e2',
+  },
+  exerciseText: {
+    fontSize: 16,
+    color: '#333',
+    marginBottom: 6,
+  },
+  restSection: {
+    marginTop: 30,
+    alignItems: 'center',
+  },
+  restLabel: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 20,
+  },
+  restOptions: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: 40,
+  },
+  restButton: {
+    backgroundColor: '#ccc',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    marginHorizontal: 10,
+    borderRadius: 20,
+  },
+  restButtonSelected: {
+    backgroundColor: '#2196f3',
+  },
+  restButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  pauseButton: {
+    backgroundColor: '#7e57c2', // Purple
+    paddingVertical: 12,
+    paddingHorizontal: 70,
+    borderRadius: 30,
+    marginBottom: 20,
+  },
+  pauseText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  finishButton: {
+    backgroundColor: '#3a8a43', // Dark green
+    paddingVertical: 12,
+    paddingHorizontal: 70,
+    borderRadius: 30,
+  },
+  finishText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
 });

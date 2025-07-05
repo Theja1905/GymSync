@@ -28,8 +28,6 @@ type Template = {
   recommended?: boolean;
 };
 
-// ...imports and type definitions remain unchanged
-
 export default function TemplatesScreen() {
   const router = useRouter();
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
@@ -38,42 +36,42 @@ export default function TemplatesScreen() {
   const [recommendedTemplates, setRecommendedTemplates] = useState<Template[]>([]);
 
   const exampleTemplates: Template[] = [
-  {
-    id: 'example1',
-    name: 'Back and Biceps',
-    exercises: ['Deadlift', 'Seated Row', 'Lat Pulldown'],
-    sets: [4, 3, 4],
-    reps: [8, 10, 12],
-  },
-  {
-    id: 'example2',
-    name: 'Shoulders and Abs',
-    exercises: ['Overhead Press', 'Lateral Raise', 'Plank', 'Crunches'],
-    sets: [4, 3, 3, 5],
-    reps: [20, 20, 15, 20],
-  },
-  {
-    id: 'example3',
-    name: 'Leg Day',
-    exercises: ['Squats', 'Lunges', 'Calf Raises', 'Leg Press'],
-    sets: [4, 3, 4, 3],
-    reps: [10, 12, 15, 10],
-  },
-  {
-    id: 'example4',
-    name: 'Full Body Burn',
-    exercises: ['Burpees', 'Push Ups', 'Mountain Climbers', 'Jump Squats'],
-    sets: [3, 3, 4, 3],
-    reps: [15, 12, 30, 20],
-  },
-  {
-  id: 'example5',
-  name: 'Chest, Triceps & Core',
-  exercises: ['Bench Press', 'Tricep Dips', 'Russian Twists', 'Leg Raises'],
-  sets: [4, 3, 3, 3],
-  reps: [10, 12, 20, 15],
-},
-];
+    {
+      id: 'example1',
+      name: 'Back and Biceps',
+      exercises: ['Deadlift', 'Seated Row', 'Lat Pulldown'],
+      sets: [4, 3, 4],
+      reps: [8, 10, 12],
+    },
+    {
+      id: 'example2',
+      name: 'Shoulders and Abs',
+      exercises: ['Overhead Press', 'Lateral Raise', 'Plank', 'Crunches'],
+      sets: [4, 3, 3, 5],
+      reps: [20, 20, 15, 20],
+    },
+    {
+      id: 'example3',
+      name: 'Leg Day',
+      exercises: ['Squats', 'Lunges', 'Calf Raises', 'Leg Press'],
+      sets: [4, 3, 4, 3],
+      reps: [10, 12, 15, 10],
+    },
+    {
+      id: 'example4',
+      name: 'Full Body Burn',
+      exercises: ['Burpees', 'Push Ups', 'Mountain Climbers', 'Jump Squats'],
+      sets: [3, 3, 4, 3],
+      reps: [15, 12, 30, 20],
+    },
+    {
+      id: 'example5',
+      name: 'Chest, Triceps & Core',
+      exercises: ['Bench Press', 'Tricep Dips', 'Russian Twists', 'Leg Raises'],
+      sets: [4, 3, 3, 3],
+      reps: [10, 12, 20, 15],
+    },
+  ];
 
   const openTemplate = (template: Template) => {
     setSelectedTemplate(template);
@@ -131,7 +129,7 @@ export default function TemplatesScreen() {
           ))
         )}
 
-        <Text style={styles.sectionHeader}>Recommended Templates</Text>
+        <Text style={[styles.sectionHeader, styles.spacedSection]}>Recommended Templates</Text>
         {recommendedTemplates.length === 0 ? (
           <Text style={styles.emptyMessage}>No recommended templates yet.</Text>
         ) : (
@@ -147,7 +145,7 @@ export default function TemplatesScreen() {
           ))
         )}
 
-        <Text style={styles.sectionHeader}>Example Templates</Text>
+        <Text style={[styles.sectionHeader, styles.spacedSection]}>Example Templates</Text>
         {exampleTemplates.map((item) => (
           <Pressable
             key={item.id}
@@ -162,51 +160,40 @@ export default function TemplatesScreen() {
         <View style={{ height: 50 }} />
       </ScrollView>
 
-      {/* Modal for Template Details (unchanged) */}
+      {/* Modal for Template Details */}
       <Modal visible={modalVisible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modal}>
             <Text style={styles.modalTitle}>{selectedTemplate?.name}</Text>
             <View style={styles.modalContent}>
-              <View style={styles.column}>
-                <Text style={styles.columnHeader}>Exercise</Text>
-                {selectedTemplate?.exercises.map((exercise, index) => (
-                  <Text key={index}>{exercise}</Text>
-                ))}
-              </View>
-              {selectedTemplate?.sets && (
-                <View style={styles.column}>
-                  <Text style={styles.columnHeader}>Sets</Text>
-                  {selectedTemplate.sets.map((set, index) => (
-                    <Text key={index}>{set}</Text>
-                  ))}
+              <Text style={styles.exerciseHeader}>Exercise</Text>
+              {selectedTemplate?.exercises.map((exercise, index) => (
+                <View key={index} style={styles.exerciseRow}>
+                  <Text style={styles.exerciseName}>{exercise}</Text>
+                  {selectedTemplate?.sets && (
+                    <Text style={styles.setsText}>
+                      {selectedTemplate.sets[index]} {selectedTemplate.sets[index] === 1 ? 'set' : 'sets'}
+                    </Text>
+                  )}
+                  {selectedTemplate?.reps && (
+                    <Text style={styles.repsText}>
+                      {selectedTemplate.reps[index]} {selectedTemplate.reps[index] === 1 ? 'rep' : 'reps'}
+                    </Text>
+                  )}
                 </View>
-              )}
-              {selectedTemplate?.reps && (
-                <View style={styles.column}>
-                  <Text style={styles.columnHeader}>Reps</Text>
-                  {selectedTemplate.reps.map((rep, index) => (
-                    <Text key={index}>{rep}</Text>
-                  ))}
-                </View>
-              )}
+              ))}
             </View>
 
             <Pressable
               style={styles.startButton}
               onPress={() => {
                 setModalVisible(false);
-
                 if (!selectedTemplate) return;
-
-                const routineExercises = selectedTemplate.exercises.map(
-                  (name, i) => ({
-                    name,
-                    sets: selectedTemplate.sets?.[i] ?? '',
-                    reps: selectedTemplate.reps?.[i] ?? '',
-                  })
-                );
-
+                const routineExercises = selectedTemplate.exercises.map((name, i) => ({
+                  name,
+                  sets: selectedTemplate.sets?.[i] ?? '',
+                  reps: selectedTemplate.reps?.[i] ?? '',
+                }));
                 router.push({
                   pathname: '/logger/screens/timer',
                   params: {
@@ -229,7 +216,6 @@ export default function TemplatesScreen() {
   );
 }
 
-// styles unchanged, just copy from your original code
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#fff' },
   container: { padding: 20 },
@@ -243,7 +229,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   templateButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  sectionHeader: { fontWeight: 'bold', fontSize: 24, marginBottom: 7 },
+  sectionHeader: { fontWeight: 'bold', fontSize: 24, marginBottom: 10},
   card: {
     backgroundColor: '#f2f2f2',
     padding: 12,
@@ -265,22 +251,52 @@ const styles = StyleSheet.create({
     width: '90%',
     position: 'relative',
   },
-  modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 12 },
+  modalTitle: { fontSize: 22, fontWeight: 800, marginBottom: 10, color: '#4a90e2'},
   modalContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     marginBottom: 20,
   },
-  column: { flex: 1 },
-  columnHeader: { fontWeight: 'bold', marginBottom: 8 },
+  exerciseHeader: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    color: '#333',
+  },
+  exerciseRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+    alignItems: 'center',
+  },
+  exerciseName: {
+    flex: 2,
+    fontWeight: '400',
+    fontSize: 15,
+    flexWrap: 'wrap',
+  },
+  setsText: {
+    flex: 1,
+    textAlign: 'center',
+    fontSize: 15,
+    color: '#555',
+  },
+  repsText: {
+    flex: 1,
+    textAlign: 'center',
+    fontSize: 15,
+    color: '#555',
+  },
   startButton: {
     backgroundColor: '#4a90e2',
-    paddingVertical: 15,
+    paddingVertical: 13,
     borderRadius: 12,
     alignItems: 'center',
-    marginTop: 8,
+    marginTop: 2,
   },
-  startButtonText: { color: '#fff', fontWeight: '600' },
-  modalClose: { position: 'absolute', top: 10, right: 16, fontSize: 20, color: '#999' },
+  startButtonText: { color: '#fff', fontWeight: '600', fontSize: 15 },
+  modalClose: { position: 'absolute', top: 22, right: 16, fontSize: 20, color: '#999' },
   emptyMessage: { fontSize: 16, color: '#888', marginTop: 4, marginBottom: 10 },
+  spacedSection: {
+  marginTop: 16, 
+  },
+
 });
