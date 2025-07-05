@@ -1,8 +1,21 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import {
+  collection,
+  getDocs,
+  query,
+  where
+} from 'firebase/firestore';
 import React, { useState } from 'react';
-import { Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  Modal,
+  Pressable,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { auth, db } from '../../../firebase';
 
 type Template = {
@@ -12,51 +25,55 @@ type Template = {
   sets?: number[];
   reps?: number[];
   uid?: string;
+  recommended?: boolean;
 };
 
-const exampleTemplates: Template[] = [
-  {
-    id: '2',
-    name: 'Back and Biceps',
-    exercises: ['Deadlift', 'Seated Row', 'Lat Pulldown'],
-    sets: [4, 3, 4],
-    reps: [6, 10, 12],
-  },
-  {
-    id: '3',
-    name: 'Legs',
-    exercises: ['Squat', 'Leg Extension', 'Flat Leg Raise'],
-    sets: [5, 4, 3],
-    reps: [8, 10, 15],
-  },
-  {
-    id: '4',
-    name: 'Chest and Triceps',
-    exercises: ['Bench Press', 'Tricep Dips', 'Push Ups'],
-    sets: [4, 3, 5],
-    reps: [8, 12, 15],
-  },
-  {
-    id: '5',
-    name: 'Shoulders and Abs',
-    exercises: ['Overhead Press', 'Lateral Raise', 'Plank'],
-    sets: [4, 4, 3],
-    reps: [10, 12, 30],
-  },
-  {
-    id: '6',
-    name: 'Full Body',
-    exercises: ['Squat', 'Deadlift', 'Push Ups', 'Pull Ups', 'Burpees'],
-    sets: [3, 4, 5, 4, 3],
-    reps: [10, 8, 15, 6, 20],
-  },
-];
+// ...imports and type definitions remain unchanged
 
 export default function TemplatesScreen() {
   const router = useRouter();
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [myTemplates, setMyTemplates] = useState<Template[]>([]);
+  const [recommendedTemplates, setRecommendedTemplates] = useState<Template[]>([]);
+
+  const exampleTemplates: Template[] = [
+  {
+    id: 'example1',
+    name: 'Back and Biceps',
+    exercises: ['Deadlift', 'Seated Row', 'Lat Pulldown'],
+    sets: [4, 3, 4],
+    reps: [8, 10, 12],
+  },
+  {
+    id: 'example2',
+    name: 'Shoulders and Abs',
+    exercises: ['Overhead Press', 'Lateral Raise', 'Plank', 'Crunches'],
+    sets: [4, 3, 3, 5],
+    reps: [20, 20, 15, 20],
+  },
+  {
+    id: 'example3',
+    name: 'Leg Day',
+    exercises: ['Squats', 'Lunges', 'Calf Raises', 'Leg Press'],
+    sets: [4, 3, 4, 3],
+    reps: [10, 12, 15, 10],
+  },
+  {
+    id: 'example4',
+    name: 'Full Body Burn',
+    exercises: ['Burpees', 'Push Ups', 'Mountain Climbers', 'Jump Squats'],
+    sets: [3, 3, 4, 3],
+    reps: [15, 12, 30, 20],
+  },
+  {
+  id: 'example5',
+  name: 'Chest, Triceps & Core',
+  exercises: ['Bench Press', 'Tricep Dips', 'Russian Twists', 'Leg Raises'],
+  sets: [4, 3, 3, 3],
+  reps: [10, 12, 20, 15],
+},
+];
 
   const openTemplate = (template: Template) => {
     setSelectedTemplate(template);
@@ -73,12 +90,13 @@ export default function TemplatesScreen() {
         const q = query(templatesRef, where('uid', '==', uid));
         const snapshot = await getDocs(q);
 
-        const templates = snapshot.docs.map(doc => ({
+        const templates = snapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         })) as Template[];
 
-        setMyTemplates(templates);
+        setMyTemplates(templates.filter((t) => !t.recommended));
+        setRecommendedTemplates(templates.filter((t) => t.recommended));
       };
 
       fetchTemplates();
@@ -98,12 +116,8 @@ export default function TemplatesScreen() {
         </Pressable>
 
         <Text style={styles.sectionHeader}>My Templates</Text>
-
         {myTemplates.length === 0 ? (
-          <>
-            <Text style={styles.emptyMessage}>You haven’t saved any templates yet.</Text>
-            <View style={{ height: 0 }} />
-          </>
+          <Text style={styles.emptyMessage}>You haven’t saved any templates yet.</Text>
         ) : (
           myTemplates.map((item) => (
             <Pressable
@@ -117,8 +131,22 @@ export default function TemplatesScreen() {
           ))
         )}
 
+        <Text style={styles.sectionHeader}>Recommended Templates</Text>
+        {recommendedTemplates.length === 0 ? (
+          <Text style={styles.emptyMessage}>No recommended templates yet.</Text>
+        ) : (
+          recommendedTemplates.map((item) => (
+            <Pressable
+              key={item.id}
+              style={styles.card}
+              onPress={() => openTemplate(item)}
+            >
+              <Text style={styles.cardTitle}>{item.name}</Text>
+              <Text style={styles.cardSub}>{item.exercises.join(', ')}</Text>
+            </Pressable>
+          ))
+        )}
 
-        {myTemplates.length === 0 && <View style={{ height: 40 }} />}
         <Text style={styles.sectionHeader}>Example Templates</Text>
         {exampleTemplates.map((item) => (
           <Pressable
@@ -134,7 +162,7 @@ export default function TemplatesScreen() {
         <View style={{ height: 50 }} />
       </ScrollView>
 
-      {/* Modal */}
+      {/* Modal for Template Details (unchanged) */}
       <Modal visible={modalVisible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modal}>
@@ -171,11 +199,13 @@ export default function TemplatesScreen() {
 
                 if (!selectedTemplate) return;
 
-                const routineExercises = selectedTemplate.exercises.map((name, i) => ({
-                  name,
-                  sets: selectedTemplate.sets?.[i] ?? '',
-                  reps: selectedTemplate.reps?.[i] ?? '',
-                }));
+                const routineExercises = selectedTemplate.exercises.map(
+                  (name, i) => ({
+                    name,
+                    sets: selectedTemplate.sets?.[i] ?? '',
+                    reps: selectedTemplate.reps?.[i] ?? '',
+                  })
+                );
 
                 router.push({
                   pathname: '/logger/screens/timer',
@@ -199,11 +229,13 @@ export default function TemplatesScreen() {
   );
 }
 
+// styles unchanged, just copy from your original code
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#fff' },
   container: { padding: 20 },
   pageTitle: { fontSize: 34, fontWeight: 'bold', marginBottom: 16 },
-  templateButton: {backgroundColor: '#4a90e2',
+  templateButton: {
+    backgroundColor: '#4a90e2',
     paddingVertical: 9,
     paddingHorizontal: 10,
     borderRadius: 20,
@@ -211,7 +243,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   templateButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  sectionHeader: { fontWeight: 'bold', fontSize: 24, marginBottom: 7},
+  sectionHeader: { fontWeight: 'bold', fontSize: 24, marginBottom: 7 },
   card: {
     backgroundColor: '#f2f2f2',
     padding: 12,
@@ -220,14 +252,35 @@ const styles = StyleSheet.create({
   },
   cardTitle: { fontWeight: 'bold', fontSize: 16 },
   cardSub: { marginTop: 4, color: '#555' },
-  modalOverlay: {flex: 1,backgroundColor: 'rgba(0,0,0,0.4)',justifyContent: 'center',alignItems: 'center',},
-  modal: {backgroundColor: '#fff',borderRadius: 16,padding: 20,width: '90%',position: 'relative',},
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modal: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    width: '90%',
+    position: 'relative',
+  },
   modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 12 },
-  modalContent: {flexDirection: 'row',justifyContent: 'space-between',marginBottom: 20,},
+  modalContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
   column: { flex: 1 },
-  columnHeader: { fontWeight: 'bold', marginBottom: 8},
-  startButton: {backgroundColor: '#4a90e2',paddingVertical: 15,borderRadius: 12,alignItems: 'center',marginTop: 8,},
+  columnHeader: { fontWeight: 'bold', marginBottom: 8 },
+  startButton: {
+    backgroundColor: '#4a90e2',
+    paddingVertical: 15,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 8,
+  },
   startButtonText: { color: '#fff', fontWeight: '600' },
-  modalClose: {position: 'absolute',top: 10,right: 16,fontSize: 20,color: '#999',},
-  emptyMessage: {fontSize: 16,color: '#888',marginTop: 4,marginBottom: -23,textAlign: 'left',},
+  modalClose: { position: 'absolute', top: 10, right: 16, fontSize: 20, color: '#999' },
+  emptyMessage: { fontSize: 16, color: '#888', marginTop: 4, marginBottom: 10 },
 });
