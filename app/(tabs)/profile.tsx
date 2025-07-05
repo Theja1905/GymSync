@@ -423,7 +423,7 @@ export default function UserProfile() {
         </View>
 
 
-        <Text style={styles.label}>Workout Frequency (days per week)</Text>
+        <Text style={styles.label}>Workout Frequency (Workouts per week)</Text>
         <TextInput
           style={styles.input}
           keyboardType="number-pad"
