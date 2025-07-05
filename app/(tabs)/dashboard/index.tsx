@@ -21,10 +21,11 @@ type Badge = {
   id: string;
   title: string;
   description: string;
-  icon: string;
+  icon: React.ComponentProps<typeof Ionicons>['name']; 
+  iconBgColor?: string;
+  iconColor?: string;
 };
 
-// StatCard component integrated here
 function StatCard({
   iconName,
   iconBgColor,
@@ -33,15 +34,54 @@ function StatCard({
   progressPercent,
   progressColor,
   unit,
+  layoutStyle, // new prop to switch layout
 }: {
   iconName: React.ComponentProps<typeof Ionicons>['name'];
   iconBgColor: string;
   statLabel: string;
   statValue: string | number;
-  progressPercent?: number; // optional
+  progressPercent?: number;
   progressColor?: string;
   unit?: string;
+  layoutStyle?: 'default' | 'iconTop';
 }) {
+  if (layoutStyle === 'iconTop') {
+    // Icon on top, title below icon, value where title used to be
+    return (
+      <View style={styles.statCard}>
+        <View style={styles.iconTopWrapper}>
+          <View style={[styles.iconCircle, { backgroundColor: iconBgColor }]}>
+            <Ionicons name={iconName} size={24} color={progressColor || '#000'} />
+          </View>
+          <Text style={[styles.statLabel, { marginTop: 13, fontWeight: '700', color: '#000', textAlign: 'center' }]}>
+            {statLabel}
+          </Text>
+        </View>
+        <Text style={[styles.statValue, { marginTop: 12, fontWeight: '700', fontSize: 20, textAlign: 'center', color: '#333' }]}>
+          {statValue}
+          {unit && <Text style={styles.unitText}>{unit}</Text>}
+        </Text>
+
+        {progressPercent !== undefined && progressColor && (
+          <>
+            <View style={styles.progressBarBackground}>
+              <View
+                style={[
+                  styles.progressBarFill,
+                  { width: `${Math.min(progressPercent, 100)}%`, backgroundColor: progressColor },
+                ]}
+              />
+            </View>
+            <Text style={[styles.progressPercent, { color: progressColor }]}>
+              {Math.round(progressPercent)}%
+            </Text>
+          </>
+        )}
+      </View>
+    );
+  }
+
+  // Default layout: icon left, label above value
   return (
     <View style={styles.statCard}>
       <View style={styles.iconWrapper}>
@@ -49,11 +89,11 @@ function StatCard({
           <Ionicons name={iconName} size={24} color={progressColor || '#000'} />
         </View>
         <View style={styles.textWrapper}>
+          <Text style={[styles.statLabel, { fontWeight: '700', color: '#000' }]}>{statLabel}</Text>
           <Text style={styles.statValue}>
             {statValue}
             {unit && <Text style={styles.unitText}>{unit}</Text>}
           </Text>
-          <Text style={styles.statLabel}>{statLabel}</Text>
         </View>
       </View>
 
@@ -115,7 +155,7 @@ export default function WeeklyDashboardScreen() {
     if (!user) return;
 
     const today = new Date();
-    const day = today.getDay(); // 0 = Sunday
+    const day = today.getDay();
     const diffToMonday = (day === 0 ? -6 : 1) - day;
     const startOfWeek = new Date(today);
     startOfWeek.setDate(today.getDate() + diffToMonday);
@@ -194,7 +234,9 @@ export default function WeeklyDashboardScreen() {
         id: 'oneWeekStrong',
         title: '1 Week Strong',
         description: 'You exercised 7 days in a row!',
-        icon: '🏆',
+        icon: 'trophy-outline',
+        iconBgColor: '#bfdbfe',
+        iconColor: '#1e40af',
       });
     }
     if (workoutCount >= 10) {
@@ -202,7 +244,9 @@ export default function WeeklyDashboardScreen() {
         id: 'topPerformer',
         title: 'Top Performer',
         description: 'Completed 10+ workouts this week',
-        icon: '🔥',
+        icon: 'flame-outline',
+        iconBgColor: '#d1fae5',
+        iconColor: '#065f46',
       });
     }
 
@@ -272,16 +316,15 @@ export default function WeeklyDashboardScreen() {
             statLabel="Total Hours"
             statValue={totalHours.toFixed(1)}
             unit="h"
-            progressPercent={Math.min((totalHours / 20) * 100, 100)}
-            progressColor="#3b82f6"
+            layoutStyle="iconTop"
           />
           <StatCard
             iconName="flame-outline"
             iconBgColor="#fee2e2"
             statLabel="Current Streak"
             statValue={currentStreak}
-            progressPercent={Math.min((currentStreak / 7) * 100, 100)}
-            progressColor="#ef4444"
+            unit={currentStreak === 1 ? ' day' : ' days'}
+            layoutStyle="iconTop"
           />
         </View>
 
@@ -298,7 +341,7 @@ export default function WeeklyDashboardScreen() {
           <View style={styles.row}>
             <StatCard
               iconName="list-outline"
-              iconBgColor="#fde68a"
+              iconBgColor="#c7d2fe"
               statLabel="Workout Target"
               statValue={`${totalWorkouts} / ${workoutFreqGoal}`}
               progressPercent={Math.min((totalWorkouts / workoutFreqGoal) * 100, 100)}
@@ -309,14 +352,21 @@ export default function WeeklyDashboardScreen() {
 
         <View style={styles.row}>
           <View style={[styles.card, { flex: 1 }]}>
-            <Text style={styles.statTitle}>🏅 Badges</Text>
+            <View style={styles.badgesTitleWrapper}>
+              <View style={[styles.iconCircle, { backgroundColor: '#fde68a' }]}>
+                <Ionicons name="ribbon-outline" size={24} color="#78350f" />
+              </View>
+              <Text style={[styles.statTitle, { marginLeft: 8 }]}>Badges</Text>
+            </View>
             {badges.length === 0 ? (
               <Text style={{ color: '#777' }}>None yet</Text>
             ) : (
               badges.map(badge => (
                 <View key={badge.id} style={styles.badge}>
-                  <Text style={styles.badgeIcon}>{badge.icon}</Text>
-                  <View style={{ marginLeft: 8 }}>
+                  <View style={[styles.iconCircle, { backgroundColor: badge.iconBgColor || '#e6f0ff' }]}>
+                    <Ionicons name={badge.icon} size={24} color={badge.iconColor || '#333'} />
+                  </View>
+                  <View style={{ marginLeft: 12, flexShrink: 1 }}>
                     <Text style={styles.badgeTitle}>{badge.title}</Text>
                     <Text style={styles.badgeDesc}>{badge.description}</Text>
                   </View>
@@ -336,7 +386,6 @@ const styles = StyleSheet.create({
   chart: {
     borderRadius: 16,
     marginBottom: 24,
-
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -357,7 +406,6 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   statTitle: { fontSize: 16, fontWeight: '600' },
-  statValue: { fontSize: 16, color: '#555', marginTop: 4 },
   goalAchieved: { color: 'green', fontWeight: '600', marginTop: 6 },
   goalPending: { color: 'orange', marginTop: 6 },
 
@@ -393,6 +441,11 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 10,
   },
+  badgesTitleWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -403,7 +456,6 @@ const styles = StyleSheet.create({
   badgeTitle: { fontWeight: '700', fontSize: 16 },
   badgeDesc: { fontSize: 14, color: '#555' },
 
-  // Styles for StatCard:
   statCard: {
     flex: 1,
     backgroundColor: '#f9f9f9',
@@ -418,6 +470,9 @@ const styles = StyleSheet.create({
   },
   iconWrapper: {
     flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  iconTopWrapper: {
     alignItems: 'center',
   },
   iconCircle: {
@@ -432,14 +487,20 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   unitText: {
-    fontSize: 14,
+    fontSize: 19,
     color: '#555',
+    fontWeight: 'bold',
   },
   statLabel: {
     fontSize: 14,
     fontWeight: '600',
-    marginTop: 4,
     color: '#666',
+  },
+  statValue: {
+    fontSize: 15,
+    color: '#555',
+    marginTop: 4,
+    fontWeight: '600'
   },
   progressBarBackground: {
     height: 8,
