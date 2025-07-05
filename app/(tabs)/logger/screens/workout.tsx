@@ -1,356 +1,261 @@
-import React, { useState, useCallback } from 'react';
+import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
+  Alert,
   ScrollView,
-  Dimensions,
-  Modal,
+  StyleSheet,
+  Text,
+  TextInput,
   TouchableOpacity,
+  View,
 } from 'react-native';
-import { LineChart } from 'react-native-chart-kit';
-import {
-  collection,
-  query,
-  where,
-  Timestamp,
-  onSnapshot,
-} from 'firebase/firestore';
-import { auth, db } from '../../../../firebase';
-import { useFocusEffect } from '@react-navigation/native';
 
-const screenWidth = Dimensions.get('window').width;
+import { addDoc, collection } from 'firebase/firestore';
+import { db } from '../../../../firebase'; // <-- update path to your firebase config
 
-type FitnessGoal = 'Weight Loss' | 'Muscle Gain' | 'Endurance';
+export default function WorkoutScreen() {
+  const router = useRouter();
 
-type Badge = {
-  id: string;
-  title: string;
-  description: string;
-  icon: string;
-};
+  const [routineTitle, setRoutineTitle] = useState('');
+  const [exercises, setExercises] = useState([
+    { id: Date.now().toString(), name: '', reps: '', sets: '' },
+  ]);
 
-export default function WeeklyDashboardScreen() {
-  const [weeklyHours, setWeeklyHours] = useState([0, 0, 0, 0, 0, 0, 0]);
-  const [totalHours, setTotalHours] = useState(0);
-  const [topExercise, setTopExercise] = useState('');
-  const [exerciseCount, setExerciseCount] = useState(0);
-  const [currentStreak, setCurrentStreak] = useState(0);
-  const [totalWorkouts, setTotalWorkouts] = useState(0);
-  const [badges, setBadges] = useState<Badge[]>([]);
-  const [modalVisible, setModalVisible] = useState(false);
+  const updateExercise = (
+    id: string,
+    field: 'name' | 'reps' | 'sets',
+    value: string
+  ) => {
+    setExercises((prev) =>
+      prev.map((ex) => (ex.id === id ? { ...ex, [field]: value } : ex))
+    );
+  };
 
-  const [userGoal, setUserGoal] = useState<FitnessGoal | null>(null);
-  const [workoutFreqGoal, setWorkoutFreqGoal] = useState<number | null>(null);
+  const addExerciseRow = () => {
+    setExercises((prev) => [
+      ...prev,
+      { id: Date.now().toString(), name: '', reps: '', sets: '' },
+    ]);
+  };
 
-  // Fetch user goals once on mount
-  React.useEffect(() => {
-    fetchUserGoal();
-  }, []);
+  const handleStartTimer = async () => {
+    if (!routineTitle.trim()) {
+      Alert.alert('Please enter a workout routine title');
+      return;
+    }
 
-  // Use realtime listener on focus for workout data
-  useFocusEffect(
-    useCallback(() => {
-      const user = auth.currentUser;
-      if (!user) return;
+    if (exercises.some((ex) => !ex.name || !ex.reps || !ex.sets)) {
+      Alert.alert('Please complete all exercise fields');
+      return;
+    }
 
-      const today = new Date();
-      const day = today.getDay();
-      // Calculate Monday as start of week
-      const diffToMonday = (day === 0 ? -6 : 1) - day;
-      const startOfWeek = new Date(today);
-      startOfWeek.setDate(today.getDate() + diffToMonday);
-      startOfWeek.setHours(0, 0, 0, 0);
-
-      const endOfWeek = new Date(startOfWeek);
-      endOfWeek.setDate(startOfWeek.getDate() + 6);
-      endOfWeek.setHours(23, 59, 59, 999);
-
-      const workoutRef = collection(db, 'workouts');
-      const q = query(
-        workoutRef,
-        where('userId', '==', user.uid),
-        where('createdAt', '>=', Timestamp.fromDate(startOfWeek)),
-        where('createdAt', '<=', Timestamp.fromDate(endOfWeek))
-      );
-
-      // Subscribe to realtime updates
-      const unsubscribe = onSnapshot(q, (snapshot) => {
-        const tempHours = [0, 0, 0, 0, 0, 0, 0];
-        let total = 0;
-        const exerciseMap: Record<string, number> = {};
-        let streak = 0;
-        let lastDate = '';
-        let workoutCount = 0;
-
-        snapshot.forEach((doc) => {
-          const data = doc.data();
-          const createdAt = data.createdAt?.toDate?.();
-          const durationStr = data.duration;
-
-          if (createdAt && durationStr) {
-            workoutCount++;
-
-            const [mins, secs] = durationStr.split(':').map(Number);
-            const totalMins = mins + secs / 60;
-            const durationInHours = totalMins / 60;
-
-            const day = createdAt.getDay();
-            const index = day === 0 ? 6 : day - 1;
-
-            tempHours[index] += durationInHours;
-            total += durationInHours;
-
-            if (Array.isArray(data.exercises)) {
-              data.exercises.forEach((e: { name: string }) => {
-                const name = e.name.toLowerCase();
-                exerciseMap[name] = (exerciseMap[name] || 0) + 1;
-              });
-            }
-
-            const dateStr = createdAt.toDateString();
-            if (dateStr !== lastDate) {
-              streak++;
-              lastDate = dateStr;
-            }
-          }
-        });
-
-        setWeeklyHours(tempHours);
-        setTotalHours(parseFloat(total.toFixed(1)));
-        setCurrentStreak(streak);
-        setTotalWorkouts(workoutCount);
-
-        const top = Object.entries(exerciseMap).sort((a, b) => b[1] - a[1])[0];
-        if (top) {
-          setTopExercise(top[0]);
-          setExerciseCount(top[1]);
-        } else {
-          setTopExercise('');
-          setExerciseCount(0);
-        }
-
-        // Set badges
-        const earnedBadges: Badge[] = [];
-        if (streak >= 7) {
-          earnedBadges.push({
-            id: 'oneWeekStrong',
-            title: '1 Week Strong',
-            description: 'You exercised 7 days in a row!',
-            icon: '🏆',
-          });
-        }
-        if (workoutCount >= 10) {
-          earnedBadges.push({
-            id: 'topPerformer',
-            title: 'Top Performer',
-            description: 'Completed 10+ workouts this week',
-            icon: '🔥',
-          });
-        }
-        setBadges(earnedBadges);
-      });
-
-      return () => unsubscribe();
-    }, [])
-  );
-
-  const fetchUserGoal = async () => {
-    const user = auth.currentUser;
-    if (!user) return;
+    const workoutData = {
+      routineTitle,
+      exercises: exercises.map((e) => ({
+        name: e.name,
+        reps: e.reps,
+        sets: e.sets,
+      })),
+      createdAt: new Date(),
+    };
 
     try {
-      const docRef = db.collection('profiles').doc(user.uid);
-      const docSnap = await docRef.get();
-      if (docSnap.exists) {
-        const data = docSnap.data();
-        setUserGoal(data?.goal || null);
-        const freq = Number(data?.workoutFrequency);
-        setWorkoutFreqGoal(!isNaN(freq) ? freq : null);
-      }
+      const docRef = await addDoc(collection(db, 'workouts'), workoutData);
+
+      router.push({
+        pathname: '/logger/screens/timer',
+        params: {
+          routineTitle,
+          exercises: JSON.stringify(
+            workoutData.exercises.map(({ name, sets }) => ({ name, sets }))
+          ),
+          workoutId: docRef.id,
+        },
+      });
     } catch (error) {
-      console.error('Error fetching user goal:', error);
+      console.error('Error saving workout:', error);
+      Alert.alert('Error saving workout. Please try again.');
     }
   };
 
-  const formatDuration = (hours: number) => {
-    const h = Math.floor(hours);
-    const m = Math.round((hours - h) * 60);
-    return `${h > 0 ? h + 'h ' : ''}${m}m`;
-  };
-
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Weekly Statistics</Text>
+    <View style={styles.page}>
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.container}>
+        <Text style={styles.title}>Add Exercises</Text>
 
-      <TouchableOpacity activeOpacity={0.8} onPress={() => setModalVisible(true)}>
-        <LineChart
-          data={{
-            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-            datasets: [{ data: weeklyHours, strokeWidth: 2 }],
-          }}
-          width={screenWidth - 32}
-          height={220}
-          yAxisSuffix="h"
-          chartConfig={{
-            backgroundColor: '#ffffff',
-            backgroundGradientFrom: '#ffffff',
-            backgroundGradientTo: '#ffffff',
-            color: (opacity = 1) => `rgba(74, 144, 226, ${opacity})`,
-            labelColor: () => '#333',
-            propsForDots: { r: '5', strokeWidth: '2', stroke: '#4a90e2' },
-          }}
-          bezier
-          style={styles.chart}
+        <TextInput
+          style={styles.routineInput}
+          placeholder="Workout Routine Title"
+          value={routineTitle}
+          onChangeText={setRoutineTitle}
         />
-      </TouchableOpacity>
 
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Workout Duration Per Day</Text>
-            {weeklyHours.map((hours, i) => (
-              <Text key={i} style={styles.modalText}>
-                {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i]}: {formatDuration(hours)}
-              </Text>
-            ))}
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => setModalVisible(false)}
-            >
-              <Text style={styles.closeButtonText}>Close</Text>
-            </TouchableOpacity>
+        <View style={styles.card}>
+          <View style={styles.headerRow}>
+            <Text style={styles.headerText}>Exercise</Text>
+            <Text style={styles.headerText}>Reps</Text>
+            <Text style={styles.headerText}>Sets</Text>
           </View>
+
+          {exercises.map((exercise) => (
+            <View style={styles.inputRow} key={exercise.id}>
+              <TextInput
+                style={styles.inputExercise}
+                placeholder="Type"
+                value={exercise.name}
+                onChangeText={(text) => updateExercise(exercise.id, 'name', text)}
+              />
+              <TextInput
+                style={styles.inputSmall}
+                placeholder="Reps"
+                value={exercise.reps}
+                keyboardType="numeric"
+                onChangeText={(text) => updateExercise(exercise.id, 'reps', text)}
+              />
+              <TextInput
+                style={styles.inputSmall}
+                placeholder="Sets"
+                value={exercise.sets}
+                keyboardType="numeric"
+                onChangeText={(text) => updateExercise(exercise.id, 'sets', text)}
+              />
+            </View>
+          ))}
+
+          <TouchableOpacity style={styles.addButton} onPress={addExerciseRow}>
+            <Text style={styles.addButtonText}>＋ Add Exercise</Text>
+          </TouchableOpacity>
         </View>
-      </Modal>
+      </ScrollView>
 
-      <View style={styles.statsContainer}>
-        <Text style={styles.statTitle}>Total Number Of Hours Of Exercise</Text>
-        <Text style={styles.statValue}>{totalHours}h</Text>
+      {/* Fixed Footer Buttons */}
+      <View style={styles.footer}>
+        <TouchableOpacity style={styles.timerButton} onPress={handleStartTimer}>
+          <Text style={styles.timerText}>Start Timer</Text>
+        </TouchableOpacity>
 
-        <Text style={styles.statTitle}>Most Frequently Done Exercise</Text>
-        <Text style={styles.statValue}>
-          {topExercise
-            ? `You did ${topExercise} ${exerciseCount}x this week`
-            : 'No exercises logged this week'}
-        </Text>
-
-        <Text style={styles.statTitle}>Current Streak</Text>
-        <Text style={styles.statValue}>
-          {currentStreak > 0
-            ? `You exercised ${currentStreak} day${currentStreak > 1 ? 's' : ''} in a row!`
-            : 'No exercise this week!'}
-        </Text>
-
-        {userGoal && workoutFreqGoal ? (
-          <View style={styles.goalContainer}>
-            <Text style={styles.statTitle}>Your Fitness Goal: {userGoal}</Text>
-            <Text style={styles.statValue}>
-              Workout Sessions This Week: {totalWorkouts} / {workoutFreqGoal}
-            </Text>
-            {totalWorkouts >= workoutFreqGoal ? (
-              <Text style={styles.goalAchieved}>🎉 Goal Achieved! Keep it up!</Text>
-            ) : (
-              <Text style={styles.goalPending}>Keep going to meet your goal!</Text>
-            )}
-          </View>
-        ) : null}
-
-        <View style={styles.badgesContainer}>
-          <Text style={[styles.statTitle, { marginBottom: 8 }]}>Badges Earned</Text>
-          {badges.length === 0 ? (
-            <Text style={{ color: '#777' }}>No badges earned yet. Keep going!</Text>
-          ) : (
-            badges.map((badge) => (
-              <View key={badge.id} style={styles.badge}>
-                <Text style={styles.badgeIcon}>{badge.icon}</Text>
-                <View style={{ marginLeft: 8 }}>
-                  <Text style={styles.badgeTitle}>{badge.title}</Text>
-                  <Text style={styles.badgeDesc}>{badge.description}</Text>
-                </View>
-              </View>
-            ))
-          )}
-        </View>
+        <TouchableOpacity
+          style={[styles.timerButton, styles.backButton]}
+          onPress={() => router.back()}
+        >
+          <Text style={styles.timerText}>Back to Logger</Text>
+        </TouchableOpacity>
       </View>
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, paddingTop: 40, backgroundColor: '#fff' },
-  title: { fontSize: 24, fontWeight: '700', marginBottom: 16, textAlign: 'center' },
-  chart: { borderRadius: 16, marginBottom: 24 },
-  statsContainer: { padding: 10 },
-  statTitle: { fontSize: 16, fontWeight: '600', marginTop: 12 },
-  statValue: { fontSize: 16, color: '#555', marginTop: 4 },
-  goalContainer: { marginTop: 20, padding: 10, backgroundColor: '#e3f2fd', borderRadius: 8 },
-  goalAchieved: { color: 'green', fontWeight: '600', marginTop: 6 },
-  goalPending: { color: 'orange', marginTop: 6 },
-
-  modalOverlay: {
+  page: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
     backgroundColor: '#fff',
-    padding: 24,
-    borderRadius: 12,
-    width: '80%',
-    alignItems: 'center',
   },
-  modalTitle: {
-    fontSize: 20,
+  scrollView: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  container: {
+    paddingTop: 80,
+    paddingHorizontal: 24,
+    paddingBottom: 40, // leave space above fixed buttons
+    alignItems: 'stretch',
+  },
+  title: {
+    fontSize: 32,
     fontWeight: '700',
-    marginBottom: 16,
+    marginBottom: 20,
   },
-  modalText: {
+  routineInput: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 30,
+    marginBottom: 24,
     fontSize: 16,
-    marginVertical: 4,
+    backgroundColor: '#fafafa',
   },
-  closeButton: {
-    marginTop: 20,
-    paddingVertical: 10,
-    paddingHorizontal: 30,
-    backgroundColor: '#4a90e2',
-    borderRadius: 8,
-  },
-  closeButtonText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 16,
-  },
-
-  badgesContainer: {
-    marginTop: 20,
-    padding: 10,
-    borderTopWidth: 1,
+  card: {
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 16,
+    borderWidth: 1,
     borderColor: '#ddd',
+    marginBottom: 30,
   },
-  badge: {
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderColor: '#eee',
+  },
+  headerText: {
+    fontWeight: '500',
+    width: '30%',
+    fontSize: 18,
+    textAlign: 'center',
+  },
+  inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#e6f0ff',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 10,
+    marginTop: 15,
   },
-  badgeIcon: {
-    fontSize: 32,
+  inputExercise: {
+    flex: 2,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 30,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    marginRight: 12,
+    fontSize: 15,
+    backgroundColor: '#f5f5f5',
   },
-  badgeTitle: {
-    fontWeight: '700',
+  inputSmall: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 30,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    marginRight: 12,
+    fontSize: 15,
+    backgroundColor: '#f5f5f5',
+  },
+  addButton: {
+    marginTop: 20,
+    alignSelf: 'flex-start',
+    paddingVertical: 10,
+    paddingHorizontal: 100,
+    backgroundColor: '#e0f0ff',
+    borderRadius: 30,
+  },
+  addButtonText: {
     fontSize: 16,
+    fontWeight: '400',
+    color: '#007AFF',
   },
-  badgeDesc: {
-    fontSize: 14,
-    color: '#555',
+  footer: {
+    paddingHorizontal: 24,
+    paddingBottom: 20,
+    paddingTop: 10,
+    backgroundColor: '#fff',
+
+  },
+  timerButton: {
+    backgroundColor: '#4a90e2',
+    paddingVertical: 10,
+    borderRadius: 20,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  backButton: {
+    backgroundColor: '#BBBBBB',
+  },
+  timerText: {
+    color: '#fff',
+    fontWeight: '400',
+    fontSize: 17,
   },
 });

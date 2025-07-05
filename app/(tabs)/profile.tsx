@@ -1,366 +1,484 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Dimensions,
-  Modal,
-  TouchableOpacity,
-} from 'react-native';
-import { LineChart } from 'react-native-chart-kit';
-import {
-  collection,
-  getDocs,
-  query,
-  where,
-  Timestamp,
-  doc,
-  getDoc,
-} from 'firebase/firestore';
+import { addDoc, collection, doc, getDoc, getDocs, query, setDoc, where, writeBatch } from 'firebase/firestore';
+import React, { useEffect, useState } from 'react';
+import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { auth, db } from '../../firebase';
-import { useFocusEffect } from '@react-navigation/native';
 
-const screenWidth = Dimensions.get('window').width;
 
-type FitnessGoal = 'Weight Loss' | 'Muscle Gain' | 'Endurance';
+const fitnessLevels = ['Beginner', 'Intermediate', 'Advanced'] as const;
+const workoutFocusOptions = ['Strength', 'Cardio', 'Flexibility'] as const;
+const fitnessGoals = ['Weight Loss', 'Muscle Gain', 'Endurance'] as const;
 
-type Badge = {
-  id: string;
-  title: string;
-  description: string;
-  icon: string;
+
+type FitnessLevel = typeof fitnessLevels[number];
+type WorkoutFocus = typeof workoutFocusOptions[number];
+type FitnessGoal = typeof fitnessGoals[number];
+
+
+type Template = {
+  id?: string;
+  name: string;
+  exercises: string[];
+  sets?: number[];
+  reps?: number[];
+  uid?: string;
+  recommended?: boolean;
 };
 
-export default function WeeklyDashboardScreen() {
-  const [weeklyHours, setWeeklyHours] = useState([0, 0, 0, 0, 0, 0, 0]);
-  const [totalHours, setTotalHours] = useState(0);
-  const [topExercise, setTopExercise] = useState('');
-  const [exerciseCount, setExerciseCount] = useState(0);
-  const [currentStreak, setCurrentStreak] = useState(0);
-  const [totalWorkouts, setTotalWorkouts] = useState(0);
-  const [badges, setBadges] = useState<Badge[]>([]);
-  const [modalVisible, setModalVisible] = useState(false);
 
-  const [userGoal, setUserGoal] = useState<FitnessGoal | null>(null);
-  const [workoutFreqGoal, setWorkoutFreqGoal] = useState<number | null>(null);
+function getRecommendedTemplates(
+  fitnessLevel: FitnessLevel,
+  workoutFocus: WorkoutFocus[],
+  goal: FitnessGoal
+): Template[] {
+  const templates: Template[] = [];
 
-  // Load once on mount
-  useEffect(() => {
-    fetchUserGoal();
-    fetchWorkoutData();
-  }, []);
 
-  // Refresh on screen focus
-  useFocusEffect(
-    useCallback(() => {
-      fetchUserGoal();
-      fetchWorkoutData();
-    }, [])
+  // Base templates by fitness level
+  const baseTemplates: Record<FitnessLevel, Template[]> = {
+    Beginner: [
+      {
+        name: 'Bodyweight Basics',
+        exercises: ['Bodyweight Squat', 'Push Ups', 'Plank'],
+        sets: [3, 3, 2],
+        reps: [12, 10, 30],
+        recommended: true,
+      },
+    ],
+    Intermediate: [
+      {
+        name: 'Intermediate Conditioning',
+        exercises: ['Goblet Squat', 'Pull Ups', 'Lunges'],
+        sets: [3, 3, 3],
+        reps: [10, 8, 12],
+        recommended: true,
+      },
+    ],
+    Advanced: [
+      {
+        name: 'Advanced Strength',
+        exercises: ['Deadlift', 'Bench Press', 'Barbell Row'],
+        sets: [4, 4, 3],
+        reps: [8, 8, 10],
+        recommended: true,
+      },
+    ],
+  };
+
+
+  // Add-on templates by workout focus
+  const focusTemplates: Record<WorkoutFocus, Template[]> = {
+    Strength: [
+      {
+        name: 'Strength Builder',
+        exercises: ['Deadlift', 'Bench Press', 'Barbell Row'],
+        sets: [4, 4, 3],
+        reps: [8, 8, 10],
+        recommended: true,
+      },
+      {
+        name: 'Power Lifts',
+        exercises: ['Squat', 'Overhead Press', 'Deadlift'],
+        sets: [3, 3, 3],
+        reps: [5, 5, 5],
+        recommended: true,
+      },
+    ],
+    Cardio: [
+      {
+        name: 'Cardio Blast',
+        exercises: ['Running', 'Jump Rope', 'Burpees'],
+        sets: [3, 4, 3],
+        reps: [30, 60, 15],
+        recommended: true,
+      },
+      {
+        name: 'HIIT Circuit',
+        exercises: ['Sprints', 'Mountain Climbers', 'Jumping Jacks'],
+        sets: [4, 4, 4],
+        reps: [20, 30, 40],
+        recommended: true,
+      },
+    ],
+    Flexibility: [
+      {
+        name: 'Flexibility Flow',
+        exercises: ['Yoga', 'Pilates', 'Dynamic Stretching'],
+        sets: [1, 1, 1],
+        reps: [60, 45, 30],
+        recommended: true,
+      },
+      {
+        name: 'Mobility Routine',
+        exercises: ['Hip Circles', 'Shoulder Rolls', 'Cat-Cow Stretch'],
+        sets: [2, 2, 2],
+        reps: [15, 15, 15],
+        recommended: true,
+      },
+    ],
+  };
+
+
+  // Add-on templates by fitness goal
+  const goalTemplates: Record<FitnessGoal, Template[]> = {
+    'Weight Loss': [
+      {
+        name: 'Fat Burner',
+        exercises: ['Burpees', 'Jump Rope', 'Mountain Climbers'],
+        sets: [3, 4, 3],
+        reps: [15, 60, 20],
+        recommended: true,
+      },
+      {
+        name: 'Calorie Crusher',
+        exercises: ['Cycling', 'Rowing', 'Jumping Jacks'],
+        sets: [4, 4, 4],
+        reps: [30, 30, 50],
+        recommended: true,
+      },
+    ],
+    'Muscle Gain': [
+      {
+        name: 'Muscle Builder',
+        exercises: ['Bench Press', 'Deadlift', 'Squat'],
+        sets: [4, 4, 4],
+        reps: [8, 8, 8],
+        recommended: true,
+      },
+      {
+        name: 'Hypertrophy Split',
+        exercises: ['Incline Dumbbell Press', 'Leg Press', 'Barbell Curl'],
+        sets: [4, 3, 3],
+        reps: [12, 10, 12],
+        recommended: true,
+      },
+    ],
+    Endurance: [
+      {
+        name: 'Endurance Booster',
+        exercises: ['Running', 'Cycling', 'Rowing'],
+        sets: [3, 3, 3],
+        reps: [30, 30, 30],
+        recommended: true,
+      },
+      {
+        name: 'Long Distance Prep',
+        exercises: ['Jogging', 'Swimming', 'Elliptical'],
+        sets: [3, 3, 3],
+        reps: [40, 30, 30],
+        recommended: true,
+      },
+    ],
+  };
+
+
+  // Add base
+  templates.push(...baseTemplates[fitnessLevel]);
+
+
+  // Add 1-2 focus templates per focus selected (limit 2 per focus)
+  workoutFocus.forEach((focus) => {
+    templates.push(...focusTemplates[focus].slice(0, 2));
+  });
+
+
+  // Add up to 2 goal templates
+  templates.push(...goalTemplates[goal].slice(0, 2));
+
+
+  // Remove duplicates by template name
+  const uniqueTemplates = Array.from(
+    new Map(templates.map((t) => [t.name, t])).values()
   );
 
-  const fetchUserGoal = async () => {
+
+  // Limit total to max 4 templates
+  return uniqueTemplates.slice(0, 4);
+}
+
+
+export default function UserProfile() {
+  const [age, setAge] = useState<string>('');
+  const [weight, setWeight] = useState<string>('');
+  const [height, setHeight] = useState<string>('');
+  const [fitnessLevel, setFitnessLevel] = useState<FitnessLevel>(fitnessLevels[0]);
+  const [workoutFocus, setWorkoutFocus] = useState<WorkoutFocus[]>([]);
+  const [goal, setGoal] = useState<FitnessGoal>(fitnessGoals[0]);
+  const [workoutFrequency, setWorkoutFrequency] = useState<string>('');
+
+
+  const toggleFocus = (focus: WorkoutFocus) => {
+    setWorkoutFocus((prev) =>
+      prev.includes(focus) ? prev.filter((f) => f !== focus) : [...prev, focus]
+    );
+  };
+
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const user = auth.currentUser;
+      if (!user) return;
+
+
+      try {
+        const docRef = doc(db, 'profiles', user.uid);
+        const docSnap = await getDoc(docRef);
+
+
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setAge(data.age || '');
+          setWeight(data.weight || '');
+          setHeight(data.height || '');
+          setFitnessLevel(data.fitnessLevel || fitnessLevels[0]);
+          setWorkoutFocus(data.workoutFocus || []);
+          setGoal(data.goal || fitnessGoals[0]);
+          setWorkoutFrequency(data.workoutFrequency || '');
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+      }
+    };
+    fetchProfile();
+  }, []);
+
+
+  const onSave = async () => {
     const user = auth.currentUser;
-    if (!user) return;
+    if (!user) {
+      Alert.alert('Error', 'User not logged in.');
+      return;
+    }
+
+
+    const profileData = {
+      age,
+      weight,
+      height,
+      fitnessLevel,
+      workoutFocus,
+      goal,
+      workoutFrequency,
+      updatedAt: new Date().toISOString(),
+    };
+
 
     try {
-      const docRef = doc(db, 'profiles', user.uid);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
+      // Save profile
+      await setDoc(doc(db, 'profiles', user.uid), profileData);
+
+
+      // Generate recommended templates
+      const recommendedTemplates = getRecommendedTemplates(fitnessLevel, workoutFocus, goal);
+
+
+      // Reference to templates collection
+      const templatesRef = collection(db, 'templates');
+
+
+      // Fetch current user's templates
+      const q = query(templatesRef, where('uid', '==', user.uid));
+      const snapshot = await getDocs(q);
+
+
+      // Initialize batch
+      const batch = writeBatch(db);
+
+
+      // Delete old recommended templates for this user
+      snapshot.docs.forEach((docSnap) => {
         const data = docSnap.data();
-        setUserGoal(data.goal || null);
-        const freq = Number(data.workoutFrequency);
-        setWorkoutFreqGoal(!isNaN(freq) ? freq : null);
+        if (data.recommended === true) {
+          batch.delete(doc(db, 'templates', docSnap.id));
+        }
+      });
+
+
+      await batch.commit();
+
+
+      // Add new recommended templates
+      for (const template of recommendedTemplates) {
+        await addDoc(templatesRef, {
+          ...template,
+          uid: user.uid,
+          recommended: true,
+        });
       }
+
+
+      Alert.alert('Success', 'Profile and Recommended Templates saved!');
     } catch (error) {
-      console.error('Error fetching user goal:', error);
+      console.error('Error saving profile or templates:', error);
+      Alert.alert('Error', 'Failed to save profile or templates.');
     }
   };
 
-  const fetchWorkoutData = async () => {
-    const user = auth.currentUser;
-    if (!user) return;
-
-    const today = new Date();
-
-    const day = today.getDay();
-    const diffToMonday = (day === 0 ? -6 : 1) - day;
-    const startOfWeek = new Date(today);
-    startOfWeek.setDate(today.getDate() + diffToMonday);
-    startOfWeek.setHours(0, 0, 0, 0);
-
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(startOfWeek.getDate() + 6);
-    endOfWeek.setHours(23, 59, 59, 999);
-
-    const workoutRef = collection(db, 'workouts');
-    const q = query(
-      workoutRef,
-      where('userId', '==', user.uid),
-      where('createdAt', '>=', Timestamp.fromDate(startOfWeek)),
-      where('createdAt', '<=', Timestamp.fromDate(endOfWeek))
-    );
-
-    const snapshot = await getDocs(q);
-
-    const tempHours = [0, 0, 0, 0, 0, 0, 0];
-    const exerciseMap: Record<string, number> = {};
-    let total = 0;
-    let streak = 0;
-    let lastDate = '';
-    let workoutCount = 0;
-
-    snapshot.forEach(doc => {
-      const data = doc.data();
-      const createdAt = data.createdAt?.toDate?.();
-      const durationStr = data.duration;
-
-      if (
-        createdAt &&
-        durationStr &&
-        createdAt >= startOfWeek &&
-        createdAt <= endOfWeek
-      ) {
-        workoutCount++;
-
-        const [mins, secs] = durationStr.split(':').map(Number);
-        const totalMins = mins + secs / 60;
-        const durationInHours = totalMins / 60;
-
-        const day = createdAt.getDay();
-        const index = day === 0 ? 6 : day - 1;
-
-        tempHours[index] += durationInHours;
-        total += durationInHours;
-
-        if (Array.isArray(data.exercises)) {
-          data.exercises.forEach((e: { name: string }) => {
-            const name = e.name.toLowerCase();
-            exerciseMap[name] = (exerciseMap[name] || 0) + 1;
-          });
-        }
-
-        const dateStr = createdAt.toDateString();
-        if (dateStr !== lastDate) {
-          streak++;
-          lastDate = dateStr;
-        }
-      }
-    });
-
-    setWeeklyHours(tempHours);
-    setTotalHours(parseFloat(total.toFixed(1)));
-    setCurrentStreak(streak);
-    setTotalWorkouts(workoutCount);
-
-    const top = Object.entries(exerciseMap).sort((a, b) => b[1] - a[1])[0];
-    if (top) {
-      setTopExercise(top[0]);
-      setExerciseCount(top[1]);
-    } else {
-      setTopExercise('');
-      setExerciseCount(0);
-    }
-
-    const earnedBadges: Badge[] = [];
-    if (streak >= 7) {
-      earnedBadges.push({
-        id: 'oneWeekStrong',
-        title: '1 Week Strong',
-        description: 'You exercised 7 days in a row!',
-        icon: '🏆',
-      });
-    }
-    if (workoutCount >= 10) {
-      earnedBadges.push({
-        id: 'topPerformer',
-        title: 'Top Performer',
-        description: 'Completed 10+ workouts this week',
-        icon: '🔥',
-      });
-    }
-
-    setBadges(earnedBadges);
-  };
-
-  const formatDuration = (hours: number) => {
-    const h = Math.floor(hours);
-    const m = Math.round((hours - h) * 60);
-    return `${h > 0 ? h + 'h ' : ''}${m}m`;
-  };
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Weekly Statistics</Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text style={styles.header}>Profile</Text>
 
-      <TouchableOpacity activeOpacity={0.8} onPress={() => setModalVisible(true)}>
-        <LineChart
-          data={{
-            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-            datasets: [{ data: weeklyHours, strokeWidth: 2 }],
-          }}
-          width={screenWidth - 32}
-          height={220}
-          yAxisSuffix="h"
-          chartConfig={{
-            backgroundColor: '#ffffff',
-            backgroundGradientFrom: '#ffffff',
-            backgroundGradientTo: '#ffffff',
-            color: (opacity = 1) => `rgba(74, 144, 226, ${opacity})`,
-            labelColor: () => '#333',
-            propsForDots: { r: '5', strokeWidth: '2', stroke: '#4a90e2' },
-          }}
-          bezier
-          style={styles.chart}
+
+        <Text style={styles.label}>Age</Text>
+        <TextInput
+          style={styles.input}
+          value={age}
+          keyboardType="number-pad"
+          onChangeText={setAge}
+          placeholder="Enter your age"
         />
-      </TouchableOpacity>
 
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Workout Duration Per Day</Text>
-            {weeklyHours.map((hours, i) => (
-              <Text key={i} style={styles.modalText}>
-                {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i]}: {formatDuration(hours)}
-              </Text>
-            ))}
+
+        <Text style={styles.label}>Weight (kg)</Text>
+        <TextInput
+          style={styles.input}
+          value={weight}
+          keyboardType="number-pad"
+          onChangeText={setWeight}
+          placeholder="Enter your weight"
+        />
+
+
+        <Text style={styles.label}>Height (cm)</Text>
+        <TextInput
+          style={styles.input}
+          value={height}
+          keyboardType="number-pad"
+          onChangeText={setHeight}
+          placeholder="Enter your height"
+        />
+
+
+        <Text style={styles.label}>Fitness Level</Text>
+        <View style={styles.pickerContainer}>
+          {fitnessLevels.map((level) => (
             <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => setModalVisible(false)}
+              key={level}
+              style={[
+                styles.pickerOption,
+                fitnessLevel === level && styles.pickerOptionSelected,
+              ]}
+              onPress={() => setFitnessLevel(level)}
             >
-              <Text style={styles.closeButtonText}>Close</Text>
+              <Text
+                style={[
+                  styles.pickerOptionText,
+                  fitnessLevel === level && styles.pickerOptionTextSelected,
+                ]}
+              >
+                {level}
+              </Text>
             </TouchableOpacity>
-          </View>
+          ))}
         </View>
-      </Modal>
 
-      <View style={styles.statsContainer}>
-        <Text style={styles.statTitle}>Total Number Of Hours Of Exercise</Text>
-        <Text style={styles.statValue}>{totalHours}h</Text>
 
-        <Text style={styles.statTitle}>Most Frequently Done Exercise</Text>
-        <Text style={styles.statValue}>
-          {topExercise
-            ? `You did ${topExercise} ${exerciseCount}x this week`
-            : 'No exercises logged this week'}
-        </Text>
-
-        <Text style={styles.statTitle}>Current Streak</Text>
-        <Text style={styles.statValue}>
-          {currentStreak > 0
-            ? `You exercised ${currentStreak} day${currentStreak > 1 ? 's' : ''} in a row!`
-            : 'No exercise this week!'}
-        </Text>
-
-        {userGoal && workoutFreqGoal ? (
-          <View style={styles.goalContainer}>
-            <Text style={styles.statTitle}>Your Fitness Goal: {userGoal}</Text>
-            <Text style={styles.statValue}>
-              Workout Sessions This Week: {totalWorkouts} / {workoutFreqGoal}
-            </Text>
-            {totalWorkouts >= workoutFreqGoal ? (
-              <Text style={styles.goalAchieved}>🎉 Goal Achieved! Keep it up!</Text>
-            ) : (
-              <Text style={styles.goalPending}>Keep going to meet your goal!</Text>
-            )}
-          </View>
-        ) : null}
-
-        <View style={styles.badgesContainer}>
-          <Text style={[styles.statTitle, { marginBottom: 8 }]}>Badges Earned</Text>
-          {badges.length === 0 ? (
-            <Text style={{ color: '#777' }}>No badges earned yet. Keep going!</Text>
-          ) : (
-            badges.map(badge => (
-              <View key={badge.id} style={styles.badge}>
-                <Text style={styles.badgeIcon}>{badge.icon}</Text>
-                <View style={{ marginLeft: 8 }}>
-                  <Text style={styles.badgeTitle}>{badge.title}</Text>
-                  <Text style={styles.badgeDesc}>{badge.description}</Text>
-                </View>
-              </View>
-            ))
-          )}
+        <Text style={styles.label}>Workout Focus Areas</Text>
+        <View style={styles.pickerContainer}>
+          {workoutFocusOptions.map((focus) => (
+            <TouchableOpacity
+              key={focus}
+              style={[
+                styles.pickerOption,
+                workoutFocus.includes(focus) && styles.pickerOptionSelected,
+              ]}
+              onPress={() => toggleFocus(focus)}
+            >
+              <Text
+                style={[
+                  styles.pickerOptionText,
+                  workoutFocus.includes(focus) && styles.pickerOptionTextSelected,
+                ]}
+              >
+                {focus}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </View>
-      </View>
-    </ScrollView>
+
+
+        <Text style={styles.label}>Fitness Goal</Text>
+        <View style={styles.pickerContainer}>
+          {fitnessGoals.map((g) => (
+            <TouchableOpacity
+              key={g}
+              style={[
+                styles.pickerOption,
+                goal === g && styles.pickerOptionSelected,
+              ]}
+              onPress={() => setGoal(g)}
+            >
+              <Text
+                style={[
+                  styles.pickerOptionText,
+                  goal === g && styles.pickerOptionTextSelected,
+                ]}
+              >
+                {g}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+
+        <Text style={styles.label}>Workout Frequency (days per week)</Text>
+        <TextInput
+          style={styles.input}
+          keyboardType="number-pad"
+          placeholder="e.g. 3"
+          value={workoutFrequency}
+          onChangeText={setWorkoutFrequency}
+        />
+
+
+        <TouchableOpacity style={styles.saveButton} onPress={onSave}>
+          <Text style={styles.saveButtonText}>Save Profile</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
+
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, paddingTop: 40, backgroundColor: '#fff' },
-  title: { fontSize: 24, fontWeight: '700', marginBottom: 16, textAlign: 'center' },
-  chart: { borderRadius: 16, marginBottom: 24 },
-  statsContainer: { padding: 10 },
-  statTitle: { fontSize: 16, fontWeight: '600', marginTop: 12 },
-  statValue: { fontSize: 16, color: '#555', marginTop: 4 },
-  goalContainer: { marginTop: 20, padding: 10, backgroundColor: '#e3f2fd', borderRadius: 8 },
-  goalAchieved: { color: 'green', fontWeight: '600', marginTop: 6 },
-  goalPending: { color: 'orange', marginTop: 6 },
-
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    backgroundColor: '#fff',
-    padding: 24,
-    borderRadius: 12,
-    width: '80%',
-    alignItems: 'center',
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    marginBottom: 16,
-  },
-  modalText: {
-    fontSize: 16,
-    marginVertical: 4,
-  },
-  closeButton: {
-    marginTop: 20,
+  container: { padding: 20, paddingBottom: 40, backgroundColor: '#fff' },
+  header: { fontSize: 32, fontWeight: '700', marginBottom: 5, textAlign: 'left' },
+  label: { fontSize: 16, marginTop: 15, marginBottom: 8, fontWeight: '600', color: '#333' },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    paddingHorizontal: 15,
     paddingVertical: 10,
-    paddingHorizontal: 30,
-    backgroundColor: '#4a90e2',
     borderRadius: 8,
-  },
-  closeButtonText: {
-    color: '#fff',
-    fontWeight: '600',
     fontSize: 16,
   },
-
-  badgesContainer: {
-    marginTop: 20,
-    padding: 10,
-    borderTopWidth: 1,
-    borderColor: '#ddd',
-  },
-  badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#e6f0ff',
-    padding: 12,
-    borderRadius: 8,
+  pickerContainer: { flexDirection: 'row', flexWrap: 'wrap' },
+  pickerOption: {
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#aaa',
+    marginRight: 10,
     marginBottom: 10,
   },
-  badgeIcon: {
-    fontSize: 32,
+  pickerOptionSelected: { backgroundColor: '#4a90e2', borderColor: '#4a90e2' },
+  pickerOptionText: { color: '#555', fontWeight: '600' },
+  pickerOptionTextSelected: { color: '#fff' },
+  saveButton: {
+    marginTop: 30,
+    backgroundColor: '#4a90e2',
+    paddingVertical: 11,
+    width: 280,
+    borderRadius: 15,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    alignSelf: 'center',
   },
-  badgeTitle: {
-    fontWeight: '700',
-    fontSize: 16,
-  },
-  badgeDesc: {
-    fontSize: 14,
-    color: '#555',
-  },
+  saveButtonText: { fontSize: 16, fontWeight: 'bold', color: '#f9f9f9' },
 });
+
+
