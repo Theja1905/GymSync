@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 90,
     borderRadius: 30,
     marginBottom: 15,
-    marginTop: 50,
+    marginTop: 40,
   },
   pauseText: {
     color: '#fff',

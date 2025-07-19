@@ -189,13 +189,13 @@ export default function WeeklyDashboardScreen() {
         const durationStr = data.duration;
 
         if (
-          createdAt &&
+          createdAt instanceof Date &&
           typeof durationStr === 'string' &&
-          durationStr.includes(':') &&
+          /^\d+:\d+$/.test(durationStr) &&
           createdAt >= startOfWeekUTC &&
           createdAt <= endOfWeekUTC
         ) {
-
+          
           workoutCount++;
 
           const [mins, secs] = durationStr.split(':').map(Number);
@@ -221,6 +221,7 @@ export default function WeeklyDashboardScreen() {
             lastDate = dateStr;
           }
         }
+
       });
 
       setWeeklyHours(tempHours);
