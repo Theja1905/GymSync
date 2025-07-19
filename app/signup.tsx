@@ -15,9 +15,6 @@ const SignupScreen = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    navigation.setOptions({ headerLeft: () => null });
-  }, [navigation]);
 
   const handleSignup = async () => {
     if (!fullName || !email || !password || !confirmPassword) {

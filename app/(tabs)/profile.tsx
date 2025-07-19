@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import {
   addDoc, collection, doc, getDoc, getDocs, query, setDoc, where, writeBatch,
 } from 'firebase/firestore';
+import { signOut } from 'firebase/auth';
 import React, { useEffect, useState } from 'react';
 import {
   Alert,
@@ -14,6 +15,7 @@ import {
   View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { auth, db } from '../../firebase';
 
 const fitnessLevels = ['Beginner', 'Intermediate', 'Advanced'] as const;
@@ -41,166 +43,52 @@ function getRecommendedTemplates(
 ): Template[] {
   const templates: Template[] = [];
 
-
-  // Base templates by fitness level
   const baseTemplates: Record<FitnessLevel, Template[]> = {
-    Beginner: [
-      {
-        name: 'Bodyweight Basics',
-        exercises: ['Bodyweight Squat', 'Push Ups', 'Plank'],
-        sets: [3, 3, 2],
-        reps: [12, 10, 30],
-        recommended: true,
-      },
-    ],
-    Intermediate: [
-      {
-        name: 'Intermediate Conditioning',
-        exercises: ['Goblet Squat', 'Pull Ups', 'Lunges'],
-        sets: [3, 3, 3],
-        reps: [10, 8, 12],
-        recommended: true,
-      },
-    ],
-    Advanced: [
-      {
-        name: 'Advanced Strength',
-        exercises: ['Deadlift', 'Bench Press', 'Barbell Row'],
-        sets: [4, 4, 3],
-        reps: [8, 8, 10],
-        recommended: true,
-      },
-    ],
+    Beginner: [{ name: 'Bodyweight Basics', exercises: ['Bodyweight Squat', 'Push Ups', 'Plank'], sets: [3, 3, 2], reps: [12, 10, 30], recommended: true }],
+    Intermediate: [{ name: 'Intermediate Conditioning', exercises: ['Goblet Squat', 'Pull Ups', 'Lunges'], sets: [3, 3, 3], reps: [10, 8, 12], recommended: true }],
+    Advanced: [{ name: 'Advanced Strength', exercises: ['Deadlift', 'Bench Press', 'Barbell Row'], sets: [4, 4, 3], reps: [8, 8, 10], recommended: true }],
   };
 
-
-  // Add-on templates by workout focus
   const focusTemplates: Record<WorkoutFocus, Template[]> = {
     Strength: [
-      {
-        name: 'Strength Builder',
-        exercises: ['Deadlift', 'Bench Press', 'Barbell Row'],
-        sets: [4, 4, 3],
-        reps: [8, 8, 10],
-        recommended: true,
-      },
-      {
-        name: 'Power Lifts',
-        exercises: ['Squat', 'Overhead Press', 'Deadlift'],
-        sets: [3, 3, 3],
-        reps: [5, 5, 5],
-        recommended: true,
-      },
+      { name: 'Strength Builder', exercises: ['Deadlift', 'Bench Press', 'Barbell Row'], sets: [4, 4, 3], reps: [8, 8, 10], recommended: true },
+      { name: 'Power Lifts', exercises: ['Squat', 'Overhead Press', 'Deadlift'], sets: [3, 3, 3], reps: [5, 5, 5], recommended: true },
     ],
     Cardio: [
-      {
-        name: 'Cardio Blast',
-        exercises: ['Running', 'Jump Rope', 'Burpees'],
-        sets: [3, 4, 3],
-        reps: [30, 60, 15],
-        recommended: true,
-      },
-      {
-        name: 'HIIT Circuit',
-        exercises: ['Sprints', 'Mountain Climbers', 'Jumping Jacks'],
-        sets: [4, 4, 4],
-        reps: [20, 30, 40],
-        recommended: true,
-      },
+      { name: 'Cardio Blast', exercises: ['Running', 'Jump Rope', 'Burpees'], sets: [3, 4, 3], reps: [30, 60, 15], recommended: true },
+      { name: 'HIIT Circuit', exercises: ['Sprints', 'Mountain Climbers', 'Jumping Jacks'], sets: [4, 4, 4], reps: [20, 30, 40], recommended: true },
     ],
     Flexibility: [
-      {
-        name: 'Flexibility Flow',
-        exercises: ['Yoga', 'Pilates', 'Dynamic Stretching'],
-        sets: [1, 1, 1],
-        reps: [60, 45, 30],
-        recommended: true,
-      },
-      {
-        name: 'Mobility Routine',
-        exercises: ['Hip Circles', 'Shoulder Rolls', 'Cat-Cow Stretch'],
-        sets: [2, 2, 2],
-        reps: [15, 15, 15],
-        recommended: true,
-      },
+      { name: 'Flexibility Flow', exercises: ['Yoga', 'Pilates', 'Dynamic Stretching'], sets: [1, 1, 1], reps: [60, 45, 30], recommended: true },
+      { name: 'Mobility Routine', exercises: ['Hip Circles', 'Shoulder Rolls', 'Cat-Cow Stretch'], sets: [2, 2, 2], reps: [15, 15, 15], recommended: true },
     ],
   };
 
-
-  // Add-on templates by fitness goal
   const goalTemplates: Record<FitnessGoal, Template[]> = {
     'Weight Loss': [
-      {
-        name: 'Fat Burner',
-        exercises: ['Burpees', 'Jump Rope', 'Mountain Climbers'],
-        sets: [3, 4, 3],
-        reps: [15, 60, 20],
-        recommended: true,
-      },
-      {
-        name: 'Calorie Crusher',
-        exercises: ['Cycling', 'Rowing', 'Jumping Jacks'],
-        sets: [4, 4, 4],
-        reps: [30, 30, 50],
-        recommended: true,
-      },
+      { name: 'Fat Burner', exercises: ['Burpees', 'Jump Rope', 'Mountain Climbers'], sets: [3, 4, 3], reps: [15, 60, 20], recommended: true },
+      { name: 'Calorie Crusher', exercises: ['Cycling', 'Rowing', 'Jumping Jacks'], sets: [4, 4, 4], reps: [30, 30, 50], recommended: true },
     ],
     'Muscle Gain': [
-      {
-        name: 'Muscle Builder',
-        exercises: ['Bench Press', 'Deadlift', 'Squat'],
-        sets: [4, 4, 4],
-        reps: [8, 8, 8],
-        recommended: true,
-      },
-      {
-        name: 'Hypertrophy Split',
-        exercises: ['Incline Dumbbell Press', 'Leg Press', 'Barbell Curl'],
-        sets: [4, 3, 3],
-        reps: [12, 10, 12],
-        recommended: true,
-      },
+      { name: 'Muscle Builder', exercises: ['Bench Press', 'Deadlift', 'Squat'], sets: [4, 4, 4], reps: [8, 8, 8], recommended: true },
+      { name: 'Hypertrophy Split', exercises: ['Incline Dumbbell Press', 'Leg Press', 'Barbell Curl'], sets: [4, 3, 3], reps: [12, 10, 12], recommended: true },
     ],
     Endurance: [
-      {
-        name: 'Endurance Booster',
-        exercises: ['Running', 'Cycling', 'Rowing'],
-        sets: [3, 3, 3],
-        reps: [30, 30, 30],
-        recommended: true,
-      },
-      {
-        name: 'Long Distance Prep',
-        exercises: ['Jogging', 'Swimming', 'Elliptical'],
-        sets: [3, 3, 3],
-        reps: [40, 30, 30],
-        recommended: true,
-      },
+      { name: 'Endurance Booster', exercises: ['Running', 'Cycling', 'Rowing'], sets: [3, 3, 3], reps: [30, 30, 30], recommended: true },
+      { name: 'Long Distance Prep', exercises: ['Jogging', 'Swimming', 'Elliptical'], sets: [3, 3, 3], reps: [40, 30, 30], recommended: true },
     ],
   };
 
-
-  // Add base
   templates.push(...baseTemplates[fitnessLevel]);
-
-
-  // Add 1-2 focus templates per focus selected (limit 2 per focus)
   workoutFocus.forEach((focus) => {
     templates.push(...focusTemplates[focus].slice(0, 2));
   });
-
-
-  // Add up to 2 goal templates
   templates.push(...goalTemplates[goal].slice(0, 2));
 
-
-  // Remove duplicates by template name
   const uniqueTemplates = Array.from(
     new Map(templates.map((t) => [t.name, t])).values()
   );
 
-
-  // Limit total to max 4 templates
   return uniqueTemplates.slice(0, 4);
 }
 
@@ -212,6 +100,9 @@ export default function UserProfile() {
   const [workoutFocus, setWorkoutFocus] = useState<WorkoutFocus[]>([]);
   const [goal, setGoal] = useState<FitnessGoal>(fitnessGoals[0]);
   const [workoutFrequency, setWorkoutFrequency] = useState('');
+  const [userEmail, setUserEmail] = useState('');
+
+  const router = useRouter();
 
   const toggleFocus = (focus: WorkoutFocus) => {
     setWorkoutFocus((prev) =>
@@ -220,10 +111,12 @@ export default function UserProfile() {
   };
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      const user = auth.currentUser;
-      if (!user) return;
+    const user = auth.currentUser;
+    if (!user) return;
 
+    setUserEmail(user.email || '');
+
+    const fetchProfile = async () => {
       try {
         const docRef = doc(db, 'profiles', user.uid);
         const docSnap = await getDoc(docRef);
@@ -263,42 +156,24 @@ export default function UserProfile() {
       updatedAt: new Date().toISOString(),
     };
 
-
     try {
-      // Save profile
       await setDoc(doc(db, 'profiles', user.uid), profileData);
 
-
-      // Generate recommended templates
       const recommendedTemplates = getRecommendedTemplates(fitnessLevel, workoutFocus, goal);
 
-
-      // Reference to templates collection
       const templatesRef = collection(db, 'templates');
-
-
-      // Fetch current user's templates
       const q = query(templatesRef, where('uid', '==', user.uid));
       const snapshot = await getDocs(q);
 
-
-      // Initialize batch
       const batch = writeBatch(db);
-
-
-      // Delete old recommended templates for this user
       snapshot.docs.forEach((docSnap) => {
         const data = docSnap.data();
         if (data.recommended === true) {
           batch.delete(doc(db, 'templates', docSnap.id));
         }
       });
-
-
       await batch.commit();
 
-
-      // Add new recommended templates
       for (const template of recommendedTemplates) {
         await addDoc(templatesRef, {
           ...template,
@@ -307,11 +182,21 @@ export default function UserProfile() {
         });
       }
 
-
       Alert.alert('Success', 'Profile and Recommended Templates saved!');
     } catch (error) {
       console.error('Error saving profile or templates:', error);
       Alert.alert('Error', 'Failed to save profile or templates.');
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      Alert.alert('Logged out', 'You have been logged out.');
+      router.replace('/login'); // navigate to login page
+    } catch (error) {
+      console.error('Logout error:', error);
+      Alert.alert('Error', 'Failed to log out.');
     }
   };
 
@@ -320,9 +205,16 @@ export default function UserProfile() {
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.header}>Profile</Text>
 
+        <View style={{ marginBottom: 20 }}>
+          <Text style={{ fontSize: 16, color: '#333' }}>
+            Logged in as: <Text style={{ fontWeight: 'bold' }}>{userEmail}</Text>
+          </Text>
+        </View>
+
+        {/* Age, Weight, Height inputs */}
         <View style={styles.card}>
           <View style={styles.inputGroup}>
-            <Ionicons name="person-outline" size={20} color="#666" />
+            <Ionicons name="person-outline" size={16} color="#666" />
             <Text style={styles.label}>Age</Text>
           </View>
           <TextInput
@@ -334,7 +226,7 @@ export default function UserProfile() {
           />
 
           <View style={styles.inputGroup}>
-            <Ionicons name="scale-outline" size={20} color="#666" />
+            <Ionicons name="scale-outline" size={16} color="#666" />
             <Text style={styles.label}>Weight (kg)</Text>
           </View>
           <TextInput
@@ -346,7 +238,7 @@ export default function UserProfile() {
           />
 
           <View style={styles.inputGroup}>
-            <Ionicons name="body-outline" size={20} color="#666" />
+            <Ionicons name="body-outline" size={16} color="#666" />
             <Text style={styles.label}>Height (cm)</Text>
           </View>
           <TextInput
@@ -358,9 +250,10 @@ export default function UserProfile() {
           />
         </View>
 
+        {/* Fitness Level */}
         <View style={styles.card}>
           <View style={styles.inputGroup}>
-            <Ionicons name="fitness-outline" size={20} color="#666" />
+            <Ionicons name="fitness-outline" size={16} color="#666" />
             <Text style={styles.label}>Fitness Level</Text>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scrollRow}>
@@ -386,9 +279,10 @@ export default function UserProfile() {
           </ScrollView>
         </View>
 
+        {/* Workout Focus */}
         <View style={styles.card}>
           <View style={styles.inputGroup}>
-            <Ionicons name="flash-outline" size={20} color="#666" />
+            <Ionicons name="flash-outline" size={16} color="#666" />
             <Text style={styles.label}>Workout Focus Areas</Text>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scrollRow}>
@@ -414,9 +308,10 @@ export default function UserProfile() {
           </ScrollView>
         </View>
 
+        {/* Fitness Goal */}
         <View style={styles.card}>
           <View style={styles.inputGroup}>
-            <Ionicons name="flag-outline" size={20} color="#666" />
+            <Ionicons name="flag-outline" size={16} color="#666" />
             <Text style={styles.label}>Fitness Goal</Text>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scrollRow}>
@@ -442,9 +337,10 @@ export default function UserProfile() {
           </ScrollView>
         </View>
 
+        {/* Workout Frequency */}
         <View style={styles.card}>
           <View style={styles.inputGroup}>
-            <Ionicons name="repeat-outline" size={20} color="#666" />
+            <Ionicons name="repeat-outline" size={16} color="#666" />
             <Text style={styles.label}>Workout Frequency (Workouts per week)</Text>
           </View>
           <TextInput
@@ -456,9 +352,17 @@ export default function UserProfile() {
           />
         </View>
 
-        <TouchableOpacity style={styles.saveButton} onPress={onSave}>
-          <Text style={styles.saveButtonText}>Save Profile</Text>
-        </TouchableOpacity>
+        <View style={{ alignItems: 'center', marginTop: 7 }}>
+          <TouchableOpacity style={styles.saveButton} onPress={onSave}>
+            <Text style={styles.saveButtonText}>Save Profile</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={{ alignItems: 'center', marginTop: 15 }}>
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <Text style={styles.logoutButtonText}>Log Out</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -487,7 +391,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   label: {
-    fontSize: 17,
+    fontSize: 14,
     fontWeight: '600',
     color: '#444',
   },
@@ -496,9 +400,10 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 15,
     paddingVertical: Platform.OS === 'ios' ? 14 : 10,
-    fontSize: 16,
+    fontSize: 14,
     color: '#222',
     marginBottom: 15,
+    marginTop: 5,
     borderWidth: 1,
     borderColor: '#d1d9e6',
   },
@@ -528,19 +433,26 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   saveButton: {
-    marginTop: 15,
     backgroundColor: '#4a90e2',
-    paddingVertical: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 125,
     borderRadius: 30,
     alignItems: 'center',
-    shadowColor: '#3a6ad9',
-    shadowOpacity: 0.6,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 5 },
-    elevation: 6,
   },
   saveButtonText: {
-    fontSize: 18,
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  logoutButton: {
+    backgroundColor: '#d9534f',
+    paddingVertical: 12,
+    paddingHorizontal: 140,
+    borderRadius: 30,
+    alignItems: 'center',
+  },
+  logoutButtonText: {
+    fontSize: 16,
     fontWeight: '700',
     color: '#fff',
   },
