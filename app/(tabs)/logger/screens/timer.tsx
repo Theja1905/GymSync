@@ -1,53 +1,47 @@
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { addDoc, collection, Timestamp } from 'firebase/firestore';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { auth, db } from '../../../../firebase';
 
 export default function TimerScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams();
+  const { routineTitle, exercises, seconds: secondsParam, isRunning: isRunningParam } = useLocalSearchParams();
 
-  const { routineTitle, exercises } = params;
+  // Parse exercises JSON string to array
   const parsedExercises = exercises ? JSON.parse(exercises as string) : [];
 
-  // Parse seconds and isRunning from params, fallback to defaults
-  const initialSeconds = params.seconds ? parseInt(params.seconds as string) : 0;
-  const initialIsRunning = params.isRunning === 'false' ? false : true;
+  // Parse seconds and isRunning from params or default
+  const initialSeconds = secondsParam ? parseInt(secondsParam as string) : 0;
+  const initialIsRunning = isRunningParam === 'false' ? false : true;
 
   const [seconds, setSeconds] = useState(initialSeconds);
   const [isRunning, setIsRunning] = useState(initialIsRunning);
-  const [restSeconds, setRestSeconds] = useState(60);
+  const [restSeconds, setRestSeconds] = useState(60); // default rest duration
 
+  // Start timer if isRunning is true, increment seconds every second
   useEffect(() => {
-    if (params.isRunning !== undefined) {
-      setIsRunning(params.isRunning === 'true');
-    }
-    if (params.seconds !== undefined) {
-      const sec = parseInt(params.seconds as string);
-      if (!isNaN(sec)) setSeconds(sec);
-    }
-  }, [params.isRunning, params.seconds]);
+    let interval: ReturnType<typeof setInterval> | undefined;
 
-  useFocusEffect(
-    useCallback(() => {
-      if (!isRunning) return;
-
-      const interval = setInterval(() => {
-        setSeconds((prev) => prev + 1);
+    if (isRunning) {
+      interval = setInterval(() => {
+        setSeconds(prev => prev + 1);
       }, 1000);
+    }
 
-      return () => clearInterval(interval);
-    }, [isRunning])
-  );
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isRunning]);
 
+  // Format seconds to MM:SS
   const formatTime = (totalSeconds: number) => {
     const mins = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
     const secs = String(totalSeconds % 60).padStart(2, '0');
     return `${mins}:${secs}`;
   };
 
+  // Pause button navigates to RestScreen with current timer state and restSeconds
   const handlePause = () => {
     setIsRunning(false);
     router.push({
@@ -56,18 +50,21 @@ export default function TimerScreen() {
         restSeconds: restSeconds.toString(),
         seconds: seconds.toString(),
         routineTitle,
-        exercises,
+        exercises: JSON.stringify(parsedExercises),
       },
     });
   };
 
+  // Finish workout: save data and navigate back to logger
   const handleFinishWorkout = async () => {
     setIsRunning(false);
+
     try {
       await addDoc(collection(db, 'workouts'), {
         routineTitle,
         exercises: parsedExercises,
-        duration: Math.floor(seconds / 60), // store as minutes
+        duration: formatTime(seconds),
+        durationSeconds: seconds, 
         createdAt: Timestamp.now(),
         userId: auth.currentUser?.uid,
         date: new Date().toLocaleDateString(),
@@ -83,7 +80,6 @@ export default function TimerScreen() {
       <Text style={styles.title}>Workout Timer</Text>
 
       <View style={styles.timerDisplay}>
-        <MaterialCommunityIcons name="timer-outline" size={40} color="#4a90e2" />
         <Text style={styles.timerText}>{formatTime(seconds)}</Text>
       </View>
 
@@ -94,10 +90,11 @@ export default function TimerScreen() {
         </Text>
       ))}
 
+      {/* Rest duration selection */}
       <View style={styles.restSection}>
         <Text style={styles.restLabel}>Select Rest Duration</Text>
         <View style={styles.restOptions}>
-          {[30, 60, 90].map((time) => (
+          {[30, 60, 90].map(time => (
             <TouchableOpacity
               key={time}
               style={[
@@ -112,12 +109,14 @@ export default function TimerScreen() {
         </View>
       </View>
 
+      {/* Pause for Rest Button */}
       {isRunning && (
         <TouchableOpacity style={styles.pauseButton} onPress={handlePause}>
           <Text style={styles.pauseText}>Pause for Rest</Text>
         </TouchableOpacity>
       )}
 
+      {/* Finish Workout Button */}
       <TouchableOpacity style={styles.finishButton} onPress={handleFinishWorkout}>
         <Text style={styles.finishText}>Finish Workout</Text>
       </TouchableOpacity>
@@ -140,10 +139,7 @@ const styles = StyleSheet.create({
     color: '#222',
   },
   timerDisplay: {
-    flexDirection: 'row',
-    alignItems: 'center',
     marginBottom: 30,
-    gap: 10,
   },
   timerText: {
     fontSize: 75,
