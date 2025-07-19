@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Timestamp, collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore';
+import { Timestamp, collection, doc, getDoc, onSnapshot, query, where } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
 import {
   Dimensions,
@@ -21,7 +21,7 @@ type Badge = {
   id: string;
   title: string;
   description: string;
-  icon: React.ComponentProps<typeof Ionicons>['name']; 
+  icon: React.ComponentProps<typeof Ionicons>['name'];
   iconBgColor?: string;
   iconColor?: string;
 };
@@ -34,7 +34,7 @@ function StatCard({
   progressPercent,
   progressColor,
   unit,
-  layoutStyle, // new prop to switch layout
+  layoutStyle,
 }: {
   iconName: React.ComponentProps<typeof Ionicons>['name'];
   iconBgColor: string;
@@ -46,7 +46,6 @@ function StatCard({
   layoutStyle?: 'default' | 'iconTop';
 }) {
   if (layoutStyle === 'iconTop') {
-    // Icon on top, title below icon, value where title used to be
     return (
       <View style={styles.statCard}>
         <View style={styles.iconTopWrapper}>
@@ -81,7 +80,6 @@ function StatCard({
     );
   }
 
-  // Default layout: icon left, label above value
   return (
     <View style={styles.statCard}>
       <View style={styles.iconWrapper}>
@@ -130,7 +128,8 @@ export default function WeeklyDashboardScreen() {
 
   useEffect(() => {
     fetchUserGoal();
-    fetchWorkoutData();
+    const unsubscribe = fetchWorkoutData();
+    return () => unsubscribe && unsubscribe();
   }, []);
 
   const fetchUserGoal = async () => {
@@ -150,7 +149,7 @@ export default function WeeklyDashboardScreen() {
     }
   };
 
-  const fetchWorkoutData = async () => {
+  const fetchWorkoutData = () => {
     const user = auth.currentUser;
     if (!user) return;
 
@@ -176,81 +175,88 @@ export default function WeeklyDashboardScreen() {
       where('createdAt', '<=', Timestamp.fromDate(endOfWeekUTC))
     );
 
-    const snapshot = await getDocs(q);
+    return onSnapshot(q, snapshot => {
+      const tempHours = [0, 0, 0, 0, 0, 0, 0];
+      const exerciseMap: Record<string, number> = {};
+      let total = 0;
+      let streak = 0;
+      let lastDate = '';
+      let workoutCount = 0;
 
-    const tempHours = [0, 0, 0, 0, 0, 0, 0];
-    const exerciseMap: Record<string, number> = {};
-    let total = 0;
-    let streak = 0;
-    let lastDate = '';
-    let workoutCount = 0;
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const createdAt = data.createdAt?.toDate?.();
+        const durationStr = data.duration;
 
-    snapshot.forEach(doc => {
-      const data = doc.data();
-      const createdAt = data.createdAt?.toDate?.();
-      const durationStr = data.duration;
+        if (
+          createdAt &&
+          typeof durationStr === 'string' &&
+          durationStr.includes(':') &&
+          createdAt >= startOfWeekUTC &&
+          createdAt <= endOfWeekUTC
+        ) {
 
-      if (createdAt && durationStr && createdAt >= startOfWeekUTC && createdAt <= endOfWeekUTC) {
-        workoutCount++;
+          workoutCount++;
 
-        const [mins, secs] = durationStr.split(':').map(Number);
-        const totalMins = mins + secs / 60;
-        const durationInHours = totalMins / 60;
+          const [mins, secs] = durationStr.split(':').map(Number);
+          const totalMins = mins + secs / 60;
+          const durationInHours = totalMins / 60;
 
-        const day = createdAt.getDay();
-        const index = day === 0 ? 6 : day - 1;
+          const day = createdAt.getDay();
+          const index = day === 0 ? 6 : day - 1;
 
-        tempHours[index] += durationInHours;
-        total += durationInHours;
+          tempHours[index] += durationInHours;
+          total += durationInHours;
 
-        if (Array.isArray(data.exercises)) {
-          data.exercises.forEach((e: { name: string }) => {
-            const name = e.name.toLowerCase();
-            exerciseMap[name] = (exerciseMap[name] || 0) + 1;
-          });
+          if (Array.isArray(data.exercises)) {
+            data.exercises.forEach((e: { name: string }) => {
+              const name = e.name.toLowerCase();
+              exerciseMap[name] = (exerciseMap[name] || 0) + 1;
+            });
+          }
+
+          const dateStr = createdAt.toDateString();
+          if (dateStr !== lastDate) {
+            streak++;
+            lastDate = dateStr;
+          }
         }
+      });
 
-        const dateStr = createdAt.toDateString();
-        if (dateStr !== lastDate) {
-          streak++;
-          lastDate = dateStr;
-        }
+      setWeeklyHours(tempHours);
+      setTotalHours(parseFloat(total.toFixed(1)));
+      setCurrentStreak(streak);
+      setTotalWorkouts(workoutCount);
+
+      const top = Object.entries(exerciseMap).sort((a, b) => b[1] - a[1])[0];
+      setTopExercise(top?.[0] || '');
+      setExerciseCount(top?.[1] || 0);
+
+      const earnedBadges: Badge[] = [];
+
+      if (streak >= 7) {
+        earnedBadges.push({
+          id: 'oneWeekStrong',
+          title: '1 Week Strong',
+          description: 'You exercised 7 days in a row!',
+          icon: 'trophy-outline',
+          iconBgColor: '#bfdbfe',
+          iconColor: '#1e40af',
+        });
       }
+      if (workoutCount >= 10) {
+        earnedBadges.push({
+          id: 'topPerformer',
+          title: 'Top Performer',
+          description: 'Completed 10+ workouts this week',
+          icon: 'flame-outline',
+          iconBgColor: '#d1fae5',
+          iconColor: '#065f46',
+        });
+      }
+
+      setBadges(earnedBadges);
     });
-
-    setWeeklyHours(tempHours);
-    setTotalHours(parseFloat(total.toFixed(1)));
-    setCurrentStreak(streak);
-    setTotalWorkouts(workoutCount);
-
-    const top = Object.entries(exerciseMap).sort((a, b) => b[1] - a[1])[0];
-    setTopExercise(top?.[0] || '');
-    setExerciseCount(top?.[1] || 0);
-
-    const earnedBadges: Badge[] = [];
-
-    if (streak >= 7) {
-      earnedBadges.push({
-        id: 'oneWeekStrong',
-        title: '1 Week Strong',
-        description: 'You exercised 7 days in a row!',
-        icon: 'trophy-outline',
-        iconBgColor: '#bfdbfe',
-        iconColor: '#1e40af',
-      });
-    }
-    if (workoutCount >= 10) {
-      earnedBadges.push({
-        id: 'topPerformer',
-        title: 'Top Performer',
-        description: 'Completed 10+ workouts this week',
-        icon: 'flame-outline',
-        iconBgColor: '#d1fae5',
-        iconColor: '#065f46',
-      });
-    }
-
-    setBadges(earnedBadges);
   };
 
   const formatDuration = (hours: number) => {
@@ -308,7 +314,7 @@ export default function WeeklyDashboardScreen() {
         </View>
       </Modal>
 
-      <View style={styles.statsContainer}>
+     <View style={styles.statsContainer}>
         <View style={styles.row}>
           <StatCard
             iconName="timer-outline"
@@ -328,6 +334,7 @@ export default function WeeklyDashboardScreen() {
           />
         </View>
 
+
         <View style={styles.row}>
           <StatCard
             iconName="barbell-outline"
@@ -336,6 +343,7 @@ export default function WeeklyDashboardScreen() {
             statValue={topExercise ? `${topExercise} (${exerciseCount}x)` : '—'}
           />
         </View>
+
 
         {userGoal && workoutFreqGoal && (
           <View style={styles.row}>
@@ -349,6 +357,7 @@ export default function WeeklyDashboardScreen() {
             />
           </View>
         )}
+
 
         <View style={styles.row}>
           <View style={[styles.card, { flex: 1 }]}>
@@ -380,6 +389,7 @@ export default function WeeklyDashboardScreen() {
   );
 }
 
+
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16, paddingTop: 60, backgroundColor: '#fff' },
   title: { fontSize: 24, fontWeight: '700', marginBottom: 16, textAlign: 'center' },
@@ -409,6 +419,7 @@ const styles = StyleSheet.create({
   goalAchieved: { color: 'green', fontWeight: '600', marginTop: 6 },
   goalPending: { color: 'orange', marginTop: 6 },
 
+
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -433,6 +444,7 @@ const styles = StyleSheet.create({
   },
   closeButtonText: { color: '#fff', fontWeight: '600', fontSize: 16 },
 
+
   badge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -455,6 +467,7 @@ const styles = StyleSheet.create({
   badgeIcon: { fontSize: 32 },
   badgeTitle: { fontWeight: '700', fontSize: 16 },
   badgeDesc: { fontSize: 14, color: '#555' },
+
 
   statCard: {
     flex: 1,
