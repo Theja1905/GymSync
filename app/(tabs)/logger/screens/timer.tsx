@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    fontSize: 34,
+    fontSize: 30,
     fontWeight: 'bold',
     marginBottom: 30,
     color: '#222',
@@ -146,21 +146,21 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   timerText: {
-    fontSize: 48,
+    fontSize: 75,
     fontWeight: 'bold',
     color: '#4a90e2',
   },
   exerciseText: {
     fontSize: 16,
     color: '#333',
-    marginBottom: 6,
+    marginBottom: 5,
   },
   restSection: {
-    marginTop: 30,
+    marginTop: 40,
     alignItems: 'center',
   },
   restLabel: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
     marginBottom: 20,
   },
@@ -187,24 +187,25 @@ const styles = StyleSheet.create({
   pauseButton: {
     backgroundColor: '#7e57c2',
     paddingVertical: 12,
-    paddingHorizontal: 70,
+    paddingHorizontal: 90,
     borderRadius: 30,
-    marginBottom: 20,
+    marginBottom: 15,
+    marginTop: 50,
   },
   pauseText: {
     color: '#fff',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
   },
   finishButton: {
     backgroundColor: '#3a8a43',
     paddingVertical: 12,
-    paddingHorizontal: 70,
+    paddingHorizontal: 90,
     borderRadius: 30,
   },
   finishText: {
     color: '#fff',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
   },
 });
