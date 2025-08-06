@@ -9,7 +9,7 @@ export default function TabsLayout() {
         let iconName: React.ComponentProps<typeof Ionicons>['name'];
 
         if (route.name === 'templates') {
-          iconName = 'list-outline'; // icon for templates
+          iconName = 'list-outline'; 
         } else if (route.name === 'logger') {
           iconName = 'barbell-outline';
         } else if (route.name === 'profile') {
@@ -17,7 +17,7 @@ export default function TabsLayout() {
         } else if (route.name === 'dashboard/index') {
           iconName = 'stats-chart-outline'; 
         } else {
-          iconName = 'alert-circle-outline'; // fallback icon
+          iconName = 'alert-circle-outline'; 
         }
 
         return {

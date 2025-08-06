@@ -193,7 +193,7 @@ export default function UserProfile() {
     try {
       await signOut(auth);
       Alert.alert('Logged out', 'You have been logged out.');
-      router.replace('/login'); // navigate to login page
+      router.replace('/login'); 
     } catch (error) {
       console.error('Logout error:', error);
       Alert.alert('Error', 'Failed to log out.');

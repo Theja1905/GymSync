@@ -31,7 +31,7 @@ export default function LoginScreen() {
 
       setLoading(false);
       Alert.alert('Success', 'Login successful!');
-      router.replace('/(tabs)/profile'); // or wherever you want to go after login
+      router.replace('/(tabs)/profile'); 
     } catch (err) {
       setLoading(false);
       if (err instanceof Error) {

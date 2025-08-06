@@ -8,18 +8,15 @@ export default function TimerScreen() {
   const router = useRouter();
   const { routineTitle, exercises, seconds: secondsParam, isRunning: isRunningParam } = useLocalSearchParams();
 
-  // Parse exercises JSON string to array
   const parsedExercises = exercises ? JSON.parse(exercises as string) : [];
 
-  // Parse seconds and isRunning from params or default
   const initialSeconds = secondsParam ? parseInt(secondsParam as string) : 0;
   const initialIsRunning = isRunningParam === 'false' ? false : true;
 
   const [seconds, setSeconds] = useState(initialSeconds);
   const [isRunning, setIsRunning] = useState(initialIsRunning);
-  const [restSeconds, setRestSeconds] = useState(60); // default rest duration
-
-  // Start timer if isRunning is true, increment seconds every second
+  const [restSeconds, setRestSeconds] = useState(60); 
+  
   useEffect(() => {
     let interval: ReturnType<typeof setInterval> | undefined;
 
@@ -34,14 +31,13 @@ export default function TimerScreen() {
     };
   }, [isRunning]);
 
-  // Format seconds to MM:SS
+  
   const formatTime = (totalSeconds: number) => {
     const mins = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
     const secs = String(totalSeconds % 60).padStart(2, '0');
     return `${mins}:${secs}`;
   };
 
-  // Pause button navigates to RestScreen with current timer state and restSeconds
   const handlePause = () => {
     setIsRunning(false);
     router.push({
@@ -55,7 +51,6 @@ export default function TimerScreen() {
     });
   };
 
-  // Finish workout: save data and navigate back to logger
   const handleFinishWorkout = async () => {
     setIsRunning(false);
 
